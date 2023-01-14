@@ -1,8 +1,7 @@
 ---
-service: serverless-react-boilerplate
+service: waveforme
 frameworkVersion: "3"
 useDotenv: true
-variablesResolutionMode: 20210326
 disabledDeprecations:
   - CLI_OPTIONS_SCHEMA # some Serverless plugins haven't been updated yet and generate warnings
 
@@ -14,7 +13,6 @@ provider:
   memorySize: 512
   timeout: 6
   logRetentionInDays: 7
-  lambdaHashingVersion: 20201221 # for upcoming Serverless v3
 
   apiGateway:
     shouldStartNameWithService: true # for upcoming Serverless v3
@@ -99,8 +97,8 @@ custom:
   serverless-offline:
     useChildProcesses: true
     noPrependStageInUrl: true
+    host: 0.0.0.0
     httpPort: 3000
-    lambdaPort: 3002
 
 resources:
   Resources:

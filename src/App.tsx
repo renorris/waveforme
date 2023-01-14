@@ -1,24 +1,29 @@
 import "./App.css";
 
 import * as React from "react";
+import { Route, Routes } from "react-router-dom";
+
+import HomePage from './pages/HomePage';
+import AboutPage from './pages/AboutPage';
+import DesignPage from './pages/DesignPage';
 
 import useConfig from "./components/useConfig";
-import logo from "./logo.svg";
+
+import "bootstrap/dist/css/bootstrap.min.css";
 
 /**
- * Our Web Application
+ * Waveforme Web Application
  */
+
 export default function App() {
   const config = useConfig();
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <h1 className="App-title">Welcome to {config.app.TITLE}</h1>
-      </header>
-      <p className="App-intro">
-        To get started, edit <code>src/App.tsx</code> and save to reload.
-      </p>
-    </div>
+    <React.StrictMode>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/design" element={<DesignPage />} />
+      </Routes>
+    </React.StrictMode>
   );
 }
