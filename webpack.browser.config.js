@@ -6,6 +6,7 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const { HotModuleReplacementPlugin } = require("webpack");
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 
 const isOffline = !!process.env.IS_OFFLINE;
 
@@ -99,6 +100,7 @@ module.exports = {
     }),
     isOffline && new HotModuleReplacementPlugin(),
     isOffline && new ReactRefreshWebpackPlugin(),
+    new NodePolyfillPlugin(),
   ].filter(Boolean),
   module: {
     rules: [
@@ -126,6 +128,9 @@ module.exports = {
     // TsconfigPathsPlugin applies the path aliases defined in `.tsconfig.json`
     plugins: [new TsconfigPathsPlugin()],
     extensions: [".browser.tsx", ".browser.ts", ".browser.jsx", ".browser.js", ".tsx", ".ts", ".jsx", ".js"],
+    fallback: {
+      "fs": false,
+    },
   },
   output: {
     path: path.join(__dirname, "dist"),

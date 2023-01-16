@@ -97,7 +97,7 @@ custom:
   serverless-offline:
     useChildProcesses: true
     noPrependStageInUrl: true
-    host: 0.0.0.0
+    host: localhost
     httpPort: 3000
 
 resources:

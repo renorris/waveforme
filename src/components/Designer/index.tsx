@@ -3,6 +3,7 @@ import FormRange from 'react-bootstrap/esm/FormRange'
 import Button from 'react-bootstrap/esm/Button';
 import Container from 'react-bootstrap/esm/Container';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
+import ffmpeg from 'ffmpeg.js/ffmpeg-mp4';
 
 function Designer() {
 
@@ -18,7 +19,7 @@ function Designer() {
     const audioBufferRef = useRef<AudioBuffer>();
 
     // Hold audio uploaded state
-    const [audioUploaded, setAudioUploaded] = useState<boolean>(false);
+    const [uploadedAudioReady, setUploadedAudioReady] = useState<boolean>(false);
 
     // Hold wavesurfer instance ref
     const wavesurferRef = useRef<WaveSurfer>();
@@ -138,11 +139,11 @@ function Designer() {
             //});
         }
 
-        if (audioUploaded) {
+        if (uploadedAudioReady) {
             create();
         }
 
-    }, [waveformOptions, audioUploaded]);
+    }, [waveformOptions, uploadedAudioReady]);
 
     // Handle component unmount equivalent
     useEffect(() => {
@@ -156,12 +157,37 @@ function Designer() {
 
     // Handle file upload events
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        let arrayBuffer = await event.target.files?.item(0)?.arrayBuffer();
-        console.log(arrayBuffer);
-        audioBufferRef.current = await audioContextRef.current?.decodeAudioData(arrayBuffer as ArrayBuffer);
-        console.log(audioBufferRef.current);
-        
-        setAudioUploaded(true);
+        // Parse arraybuffer from File
+        let file = event.target.files?.item(0) as File;
+        console.log(file.type);
+        let arr = new Uint8Array(await file.arrayBuffer());
+
+        // UNUSED DEBUG
+        //const blob = new Blob([arrayBuffer], {type: 'video/quicktime'});
+        //downloadBlob(blob);
+
+        // ffmpeg
+        let stdout = "";
+        let stderr = "";
+        const result = ffmpeg({
+            MEMFS: [{ name: file.name, data: arr }],
+            print: function(data) { stdout += data + "\n"; },
+            printErr: function(data) { stderr += data + "\n"; },
+            // ffmpeg -i input.wav -vn -ar 44100 -ac 2 -b:a 192k output.mp3
+            arguments: ["-i", file.name, "-threads", "1", "-vn", "-ac", "1", "-b:a", "256k", "out.mp3"],
+            onExit: function(code) {
+                console.log("Process exited with code " + code);
+                console.log(stdout);
+                console.log(stderr);
+            },
+        });
+
+        //console.log(result);
+
+        audioBufferRef.current = await audioContextRef.current?.decodeAudioData(result.MEMFS[0].data.buffer);
+        //console.log(audioBufferRef.current);
+
+        setUploadedAudioReady(true);
     }
 
     // wavesurfer audioprocess event callback handler
@@ -212,7 +238,7 @@ function Designer() {
         <Container fluid className='designerContainer d-flex flex-column justify-content-center align-items-center mx-0 px-2'>
             <div
                 className='audioUploadContainer'
-                style={{ display: `${audioUploaded ? 'none' : 'block'}` }}
+                style={{ display: `${uploadedAudioReady ? 'none' : 'block'}` }}
             >
                 <input
                     id='formFile'
@@ -220,6 +246,14 @@ function Designer() {
                     type='file'
                     onChange={event => handleFileUpload(event)}
                 />
+            </div>
+
+            <div
+                className='audioUploadingContainer'
+                style={{ display: 'none' }}
+            >
+                <h3>Extracting Audio...</h3>
+                <p>Please wait</p>
             </div>
 
             <div
