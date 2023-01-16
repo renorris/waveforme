@@ -1,6 +1,6 @@
 {
-  "name": "serverless-react-boilerplate",
-  "version": "0.1.0",
+  "name": "waveforme",
+  "version": "0.0.2",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {

@@ -1,6 +1,6 @@
 {
-  "name": "serverless-react-boilerplate",
-  "version": "0.1.0",
+  "name": "waveforme",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
     "start": "cross-env IS_OFFLINE=1 concurrently --kill-others \"npm run start:devserver\" \"npm run start:offline\"",

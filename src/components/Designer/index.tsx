@@ -21,6 +21,9 @@ function Designer() {
     // Hold audio uploaded state
     const [uploadedAudioReady, setUploadedAudioReady] = useState<boolean>(false);
 
+    // Hold audio uploading status DOM ref
+    const audioUploadingStatusRef = useRef<HTMLDivElement | null>();
+
     // Hold wavesurfer instance ref
     const wavesurferRef = useRef<WaveSurfer>();
 
@@ -64,6 +67,7 @@ function Designer() {
         hideScrollbar: true,
         progressColor: '#0D5BFF',
         waveColor: '#000000',
+        barMinHeight: 3,
         height: (waveformParentContainerRef.current?.offsetWidth as number * waveformOptions.heightMultiplier),
     });
 
@@ -143,7 +147,7 @@ function Designer() {
             create();
         }
 
-    }, [waveformOptions, uploadedAudioReady]);
+    }, [waveformOptions, uploadedAudioReady, playing]);
 
     // Handle component unmount equivalent
     useEffect(() => {
@@ -166,16 +170,19 @@ function Designer() {
         //const blob = new Blob([arrayBuffer], {type: 'video/quicktime'});
         //downloadBlob(blob);
 
+        let statusRef = audioUploadingStatusRef.current as HTMLDivElement;
+        statusRef.style.display = 'block';
+
         // ffmpeg
         let stdout = "";
         let stderr = "";
         const result = ffmpeg({
             MEMFS: [{ name: file.name, data: arr }],
-            print: function(data) { stdout += data + "\n"; },
-            printErr: function(data) { stderr += data + "\n"; },
+            print: function (data) { stdout += data + "\n"; },
+            printErr: function (data) { stderr += data + "\n"; },
             // ffmpeg -i input.wav -vn -ar 44100 -ac 2 -b:a 192k output.mp3
             arguments: ["-i", file.name, "-threads", "1", "-vn", "-ac", "1", "-b:a", "256k", "out.mp3"],
-            onExit: function(code) {
+            onExit: function (code) {
                 console.log("Process exited with code " + code);
                 console.log(stdout);
                 console.log(stderr);
@@ -188,6 +195,8 @@ function Designer() {
         //console.log(audioBufferRef.current);
 
         setUploadedAudioReady(true);
+
+        statusRef.style.display = 'none';
     }
 
     // wavesurfer audioprocess event callback handler
@@ -237,8 +246,8 @@ function Designer() {
     return (
         <Container fluid className='designerContainer d-flex flex-column justify-content-center align-items-center mx-0 px-2'>
             <div
-                className='audioUploadContainer'
-                style={{ display: `${uploadedAudioReady ? 'none' : 'block'}` }}
+                className='audioUploadContainer mt-3'
+                style={{ display: uploadedAudioReady ? 'none' : 'block' }}
             >
                 <input
                     id='formFile'
@@ -249,8 +258,10 @@ function Designer() {
             </div>
 
             <div
-                className='audioUploadingContainer'
+                id='audioUploadingStatus'
+                className='mt-3'
                 style={{ display: 'none' }}
+                ref={audioUploadingStatusRef as React.MutableRefObject<HTMLDivElement | null>}
             >
                 <h3>Extracting Audio...</h3>
                 <p>Please wait</p>
@@ -268,57 +279,78 @@ function Designer() {
                 />
             </div>
 
-            <Container className='audioControlsRowFlexContainer mt-3 d-flex flex-row gap-2 justify-content-center align-items-center'>
-                <Button
-                    onClick={handlePlayButtonClick}
-                    variant={playing ? 'danger' : 'success'}
-                >
-                    {playing ? 'Pause' : 'Play'}
-                </Button>
-            </Container>
+            <Container
+                id='mainControlsContainer'
+                className={`${uploadedAudioReady ? 'd-flex' : 'd-none'} flex-column justify-content-center align-items-center`}
+                style={{ maxWidth: '512px' }}
+            >
 
-            <Container className='debugColumnFlexContainer mt-3 d-flex flex-column gap-2 justify-content-center align-items-center'>
-                <p>DEBUG: {audioprocessTest.current}, {audioPositionRef.current}</p>
-            </Container>
-
-            <Container className='waveformControlsRowFlexContainer mt-3 d-flex flex-row gap-2 justify-content-start align-items-start' style={{ maxWidth: '512px' }}>
-
-                <Container className='switchControlsFlexContainer d-flex flex-column gap-2 justify-content-start align-items-start p-0'>
+                <Container
+                    id='playPauseRowContainer'
+                    className='d-flex flex-row gap-2 justify-content-center align-items-center mt-2'>
                     <Button
-                        variant={waveformOptions.normalize ? 'success' : 'outline-danger'}
-                        onClick={handleNormalizeButtonPress}
-                    >Normalize</Button>
+                        onClick={handlePlayButtonClick}
+                        variant={playing ? 'danger' : 'success'}
+                    >
+                        {playing ? 'Pause' : 'Play'}
+                    </Button>
                 </Container>
 
-                <Container className='rangeControlsFlexContainer d-flex flex-column gap-2 justify-content-start align-items-start p-0'>
-                    <div>Intensity: {waveformOptions.normalize ? 'Normalized' : waveformOptions.barHeight}</div>
-                    <FormRange
-                        id='barHeightRange'
-                        min='0.1'
-                        max='5'
-                        defaultValue='1'
-                        step='0.01'
-                        disabled={waveformOptions.normalize}
-                        onChange={event => handleBarHeightRangeChange(parseFloat(event.target.value))}
-                    />
-                    <div>Width: {waveformOptions.barWidth}</div>
-                    <FormRange
-                        id='barWidthRange'
-                        min='1'
-                        max='15'
-                        defaultValue='1'
-                        step='0.01'
-                        onChange={event => handleBarWidthRangeChange(parseFloat(event.target.value))}
-                    />
-                    <div>Spacing: {waveformOptions.barGap}</div>
-                    <FormRange
-                        id='barGapRange'
-                        min='1'
-                        max='10'
-                        defaultValue='1'
-                        step='0.01'
-                        onChange={event => handleBarGapRangeChange(parseFloat(event.target.value))}
-                    />
+                <Container
+                    id='waveformControlsContainer'
+                    className='d-flex flex-row justify-content-center align-items-center mt-2'
+                >
+
+                    <Container
+                        id='leftButtonsContainer'
+                        className='d-flex flex-column gap-2 justify-content-start align-items-start p-0'>
+                        <Button variant='outline-secondary'>Button 1</Button>
+                        <Button variant='outline-secondary'>Button 2</Button>
+                        <Button variant='outline-secondary'>Button 3</Button>
+                    </Container>
+
+                    <Container 
+                        id='rangeSelectorContainer'
+                        className='d-flex flex-column gap-2 justify-content-start align-items-start p-0'
+                    >
+                        <div>
+                            Intensity
+                            <Button
+                                className='ms-2 btn-sm'
+                                variant={waveformOptions.normalize ? 'info' : 'outline-secondary'}
+                                onClick={handleNormalizeButtonPress}
+                            >
+                                {waveformOptions.normalize ? 'Normalized' : 'Normalize'}
+                            </Button>
+                        </div>
+                        <FormRange
+                            id='barHeightRange'
+                            min='0.1'
+                            max='5'
+                            defaultValue='1'
+                            step='0.01'
+                            disabled={waveformOptions.normalize}
+                            onChange={event => handleBarHeightRangeChange(parseFloat(event.target.value))}
+                        />
+                        <div>Width</div>
+                        <FormRange
+                            id='barWidthRange'
+                            min='1'
+                            max='15'
+                            defaultValue='1'
+                            step='0.01'
+                            onChange={event => handleBarWidthRangeChange(parseFloat(event.target.value))}
+                        />
+                        <div>Spacing</div>
+                        <FormRange
+                            id='barGapRange'
+                            min='1'
+                            max='10'
+                            defaultValue='1'
+                            step='0.01'
+                            onChange={event => handleBarGapRangeChange(parseFloat(event.target.value))}
+                        />
+                    </Container>
                 </Container>
             </Container>
         </Container>
