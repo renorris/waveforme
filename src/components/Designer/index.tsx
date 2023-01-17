@@ -3,47 +3,28 @@ import FormRange from 'react-bootstrap/esm/FormRange'
 import Button from 'react-bootstrap/esm/Button';
 import Container from 'react-bootstrap/esm/Container';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
-import ffmpeg from 'ffmpeg.js/ffmpeg-mp4';
+import { Options } from 'ffmpeg.js/ffmpeg-mp4';
+import { Result } from 'ffmpeg.js/ffmpeg-mp4';
 
 function Designer() {
 
-    // Hold master AudioContext ref
+    // Config audio context
     const audioContextRef = useRef<AudioContext>();
-
-    // Initial set
     useEffect(() => {
         audioContextRef.current = new AudioContext({ sampleRate: 44100 });
     }, []);
 
-    // Hold master audio ArrayBuffer ref
+    // Set stuff
     const audioBufferRef = useRef<AudioBuffer>();
-
-    // Hold audio uploaded state
     const [uploadedAudioReady, setUploadedAudioReady] = useState<boolean>(false);
-
-    // Hold audio uploading status DOM ref
     const audioUploadingStatusRef = useRef<HTMLDivElement | null>();
-
-    // Hold wavesurfer instance ref
     const wavesurferRef = useRef<WaveSurfer>();
-
-    // Hold wavesurfer DOM refs
     const waveformContainerRef = useRef<HTMLDivElement | null>();
     const waveformParentContainerRef = useRef<HTMLDivElement | null>();
-
-    // Hold wavesurfer audio data ref
-    const audioDataRef = useRef<string>('https://wavesurfer-js.org/example/media/demo.wav');
-
-    // Hold playing state
     const [playing, setPlaying] = useState<boolean>(false);
-
-    // Hold position ref
     const audioPositionRef = useRef<number>(0);
-
-    // Hold testing audioprocess ref
     const audioprocessTest = useRef<number>(0);
 
-    // Hold waveform options state
     const [waveformOptions, setWaveformOptions] = useState({
         heightMultiplier: 0.5,
         barGap: 1,
@@ -159,25 +140,36 @@ function Designer() {
         }
     }, []);
 
+    // Touch ffmpeg spinning up the async load
+    const touchFfmpeg = async () => {
+        import('ffmpeg.js/ffmpeg-mp4');
+    }
+
+    // Touch wavesurfer spinning up the async load
+    const touchWavesurfer = async () => {
+        import('wavesurfer.js');
+    }
+
     // Handle file upload events
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        // Parse arraybuffer from File
+        // Parse file
         let file = event.target.files?.item(0) as File;
         console.log(file.type);
-        let arr = new Uint8Array(await file.arrayBuffer());
+        let fileUint8Array = new Uint8Array(await file.arrayBuffer());
+        let fileName = file.name;
 
-        // UNUSED DEBUG
-        //const blob = new Blob([arrayBuffer], {type: 'video/quicktime'});
-        //downloadBlob(blob);
+        let audioUploadingStatusElement = audioUploadingStatusRef.current as HTMLDivElement;
+        audioUploadingStatusElement.style.display = 'block';
 
-        let statusRef = audioUploadingStatusRef.current as HTMLDivElement;
-        statusRef.style.display = 'block';
+        // ffmpeg test
+        const ffmpeg = await import('ffmpeg.js/ffmpeg-mp4');
 
-        // ffmpeg
-        let stdout = "";
-        let stderr = "";
-        const result = ffmpeg({
-            MEMFS: [{ name: file.name, data: arr }],
+        console.log("fired");
+
+        let stderr: string;
+        let stdout: string;
+        let result = ffmpeg.default({
+            MEMFS: [{ name: file.name, data: fileUint8Array }],
             print: function (data) { stdout += data + "\n"; },
             printErr: function (data) { stderr += data + "\n"; },
             // ffmpeg -i input.wav -vn -ar 44100 -ac 2 -b:a 192k output.mp3
@@ -189,14 +181,10 @@ function Designer() {
             },
         });
 
-        //console.log(result);
-
         audioBufferRef.current = await audioContextRef.current?.decodeAudioData(result.MEMFS[0].data.buffer);
-        //console.log(audioBufferRef.current);
 
+        audioUploadingStatusElement.style.display = 'none';
         setUploadedAudioReady(true);
-
-        statusRef.style.display = 'none';
     }
 
     // wavesurfer audioprocess event callback handler
@@ -244,27 +232,36 @@ function Designer() {
     }
 
     return (
-        <Container fluid className='designerContainer d-flex flex-column justify-content-center align-items-center mx-0 px-2'>
+        <Container 
+            fluid 
+            className='designerContainer d-flex flex-column justify-content-center align-items-center mx-0 px-2'
+            
+        >
             <div
                 className='audioUploadContainer mt-3'
-                style={{ display: uploadedAudioReady ? 'none' : 'block' }}
+                style={{ display: uploadedAudioReady ? 'none' : 'block', maxWidth: '512px' }}
             >
                 <input
                     id='formFile'
                     className='form-control'
                     type='file'
                     onChange={event => handleFileUpload(event)}
+                    onClick={() => {
+                            touchFfmpeg();
+                            touchWavesurfer();
+                        }
+                    }   
                 />
             </div>
 
             <div
                 id='audioUploadingStatus'
                 className='mt-3'
-                style={{ display: 'none' }}
+                style={{ display: 'none', maxWidth: '512px' }}
                 ref={audioUploadingStatusRef as React.MutableRefObject<HTMLDivElement | null>}
             >
                 <h3>Extracting Audio...</h3>
-                <p>Please wait</p>
+                <p>This might take a while depending on your file size and network speed</p>
             </div>
 
             <div
@@ -309,7 +306,7 @@ function Designer() {
                         <Button variant='outline-secondary'>Button 3</Button>
                     </Container>
 
-                    <Container 
+                    <Container
                         id='rangeSelectorContainer'
                         className='d-flex flex-column gap-2 justify-content-start align-items-start p-0'
                     >

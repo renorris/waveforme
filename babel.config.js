@@ -9,7 +9,7 @@ module.exports = (api) => {
         {
           useBuiltIns: "entry",
           corejs: "3.9",
-          targets: isNode ? { node: "12" } : { browsers: "last 2 versions" },
+          targets: isNode ? { node: "14" } : { browsers: "last 2 versions" },
         },
       ],
       "@babel/preset-typescript",

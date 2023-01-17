@@ -45,8 +45,14 @@ module.exports = {
     hints: false,
   },
   optimization: {
-    runtimeChunk: "single",
+    //runtimeChunk: "single",
     splitChunks: {
+      chunks: 'async',
+      minSize: 20000,
+      //maxSize: 0,
+      minChunks: 2,
+      maxAsyncRequests: 30,
+      maxInitialRequests: 5,
       cacheGroups: {
         // TODO: Customize code splitting to your needs
         vendor: {
@@ -59,6 +65,11 @@ module.exports = {
           test: /[\\/]src[\\/]components[\\/]/,
           chunks: "all",
           minSize: 0,
+        },
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true
         },
       },
     },
