@@ -1,10 +1,9 @@
-/**
- * Provide configuration settings
- */
-import { createContext } from "react";
+// Waveforme ConfigContext.tsx
+// Copyright (C) 2023 Reese Norris - All Rights Reserved
 
-import { Config } from "../server/config";
+import { createContext } from 'react';
+import { Config } from '../config';
 
-const ConfigContext = createContext<Config | undefined>(undefined);
+const ConfigContext = createContext<Config | null>(null);
 
 export default ConfigContext;
