@@ -1,3 +1,6 @@
+// Waveforme HomePage index.tsx
+// Copyright (C) 2023 Reese Norris - All Rights Reserved
+
 import React from 'react';
 import Button from 'react-bootstrap/esm/Button';
 import Container from 'react-bootstrap/esm/Container';

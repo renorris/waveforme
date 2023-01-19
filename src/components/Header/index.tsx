@@ -1,3 +1,6 @@
+// Waveforme Header index.tsx
+// Copyright (C) 2023 Reese Norris - All Rights Reserved
+
 import React from "react";
 import Container from "react-bootstrap/esm/Container";
 import Dropdown from "react-bootstrap/esm/Dropdown";

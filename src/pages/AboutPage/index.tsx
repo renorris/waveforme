@@ -1,3 +1,6 @@
+// Waveforme AboutPage index.tsx
+// Copyright (C) 2023 Reese Norris - All Rights Reserved
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
