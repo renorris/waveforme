@@ -5,7 +5,7 @@
 
 import manifest from '../public/manifest.json';
 
-const isLocal = process.env.IS_OFFLINE;
+const isLocal = !!process.env.IS_OFFLINE;
 
 const config = {
     app: {

@@ -2,9 +2,24 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import { hydrateRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom';
 
-// Import main App
 import App from '../App';
+import { Config } from '../config';
+import ConfigContext from '../components/ConfigContext';
+import SSRProvider from 'react-bootstrap/esm/SSRProvider';
 
-ReactDOM.hydrate(<App />, document.getElementById('root'));
+const config = (window as any).__CONFIG__ as Config;
+//const basename = config.app.URL.match(/^(?:https?:\/\/)?[^\/]+(\/?.+)?$/i)?.[1];
+
+const container = document.getElementById('root');
+hydrateRoot(container!,
+    <SSRProvider>
+        <ConfigContext.Provider value={config}>
+            <BrowserRouter basename='/'>
+                <App />
+            </BrowserRouter>
+        </ConfigContext.Provider>
+    </SSRProvider>
+);

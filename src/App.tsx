@@ -2,11 +2,22 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import * as React from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+import HomePage from './pages/HomePage';
+import AboutPage from './pages/AboutPage';
+import DesignPage from './pages/DesignPage';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
-    return(
+    return (
         <React.StrictMode>
-            <h1>Waveforme App Placeholder</h1>
+            <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/design" element={<DesignPage />} />
+            </Routes>
         </React.StrictMode>
     )
 }

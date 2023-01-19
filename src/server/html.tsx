@@ -4,9 +4,9 @@
 // Provide HTML template for SSR
 
 import { Stats } from '../types';
-import config from '../config';
+import { Config } from '../config';
 
-const html = (content: string, stats: Stats) => `<!DOCTYPE html>
+const html = (content: string, stats: Stats, config: Config) => `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />

@@ -3,9 +3,9 @@
 
 // Main Lambda handler serving SSR 
 
-import { Context, APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { Context, APIGatewayProxyResult, APIGatewayProxyEventV2 } from 'aws-lambda';
 
-const serve = async (event: APIGatewayEvent, _context: Context): Promise<APIGatewayProxyResult> => {
+const serve = async (event: APIGatewayProxyEventV2, _context: Context): Promise<APIGatewayProxyResult> => {
     try {
         const render = (await import('../index')).default;
         return {

@@ -4,8 +4,6 @@
 const path = require('path');
 const slsw = require("serverless-webpack");
 
-const isDevelopment = process.env.IS_DEVELOPMENT;
-
 module.exports = {
     entry: slsw.lib.entries,
     mode: 'development',
@@ -23,6 +21,10 @@ module.exports = {
                 test: /\.(ts|js)x?$/,
                 exclude: /node_modules/, // we shouldn't need processing `node_modules`
                 use: 'babel-loader',
+            },
+            {
+                test: /\.css$/,
+                use: "null-loader", // No server-side CSS processing
             },
             {
                 test: /\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$/,

@@ -5,31 +5,34 @@
 
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
-import { APIGatewayEvent } from 'aws-lambda';
-import { Stats } from '../types';
+import { APIGatewayProxyEventV2 } from 'aws-lambda';
+import { StaticRouter } from 'react-router-dom/server';
+import SSRProvider from 'react-bootstrap/esm/SSRProvider';
 
-// Import main App
 import App from '../App';
-
-// Import config context component & assoc. config object
+import { Stats } from '../types';
 import ConfigContext from '../components/ConfigContext';
 import config from '../config';
 
 // Import HTML template
 import html from './html';
 
-async function render(event: APIGatewayEvent): Promise<string> {
-    
+async function render(event: APIGatewayProxyEventV2): Promise<string> {
+
     const stats = (await import("../../dist/stats.json")) as unknown as Stats;
+    //console.log(JSON.stringify(event));
 
     const content = renderToString(
-        <ConfigContext.Provider value={config}>
-            <App /> 
-        </ConfigContext.Provider>
+        <SSRProvider>
+            <ConfigContext.Provider value={config}>
+                <StaticRouter basename='/' location={event.requestContext.http.path}>
+                    <App />
+                </StaticRouter>
+            </ConfigContext.Provider>
+        </SSRProvider>
     );
 
-    return html(content, stats);
-    
+    return html(content, stats, config);
 }
 
 export default render;
