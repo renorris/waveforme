@@ -7,6 +7,7 @@ import Container from 'react-bootstrap/esm/Container';
 import Waveform, { WaveformOptions, WaveformCallbacks } from './Waveform';
 import AudioUploader, { AudioUploaderCallbacks } from './AudioUploader';
 import WaveformControls, { WaveformControlsCallbacks } from './WaveformControls';
+import Trimmer, { TrimmerCallbacks } from './Trimmer';
 
 function Designer() {
 
@@ -52,12 +53,16 @@ function Designer() {
         audioReadyCallback: async (file) => {
             const arrayBuffer = await file.arrayBuffer();
             audioBufferRef.current = await audioContextRef.current!.decodeAudioData(arrayBuffer);
-            setAudioFile(file);
+            audioFile.current = file;
+            setShouldDisplayWaveform(true);
         },
     };
 
-    // Audio file state
-    const [audioFile, setAudioFile] = useState<File | null>(null);
+    // Audio file refs
+    const audioFile = useRef<File | null>(null);
+
+    // Should display waveform state
+    const [shouldDisplayWaveform, setShouldDisplayWaveform] = useState<boolean>(false);
 
     // Callbacks for waveform controls
     const waveformControlsCallbacks: WaveformControlsCallbacks = {
@@ -76,17 +81,35 @@ function Designer() {
         barGapRangeChangeCallback: (value) => {
             setWaveformOptions(Object.assign({}, waveformOptions, { barGap: value }));
         },
+        trimCallback: () => {
+            setIsTrimmerEnabled(!isTrimmerEnabled);
+            setShouldDisplayWaveform(!shouldDisplayWaveform);
+        },
     };
+
+    // Trimmer enabled state
+    const [isTrimmerEnabled, setIsTrimmerEnabled] = useState<boolean>(false);
+
+    // Trimmer callbacks
+    const trimmerCallbacks: TrimmerCallbacks = {
+        trimCompleteCallback: async (file) => {
+            const arrayBuffer = await file.arrayBuffer();
+            audioBufferRef.current = await audioContextRef.current!.decodeAudioData(arrayBuffer);
+            audioFile.current = file;
+            setIsTrimmerEnabled(false);
+            setShouldDisplayWaveform(true);
+        }
+    }
 
     return (
         <Container
             className='d-flex flex-column justify-content-center align-items-center'
             style={{ maxWidth: '512px' }}
         >
-            {!audioFile &&
+            {!shouldDisplayWaveform && !isTrimmerEnabled &&
                 <AudioUploader {...audioUploaderCallbacks} />
             }
-            {audioFile &&
+            {shouldDisplayWaveform && !isTrimmerEnabled &&
                 <>
                     <Waveform
                         {...waveformOptions}
@@ -100,6 +123,20 @@ function Designer() {
                         waveformOptions={waveformOptions}
                     />
                 </>
+            }
+            {!shouldDisplayWaveform && isTrimmerEnabled &&
+                <Trimmer
+                    {...trimmerCallbacks}
+                    file={audioFile.current!}
+                >
+                    <Waveform
+                        {...waveformOptions}
+                        {...waveformCallbacks}
+                        position={waveformPosition.current!}
+                        audioBuffer={audioBufferRef.current!}
+                        audioContext={audioContextRef.current!}
+                    />
+                </Trimmer>
             }
         </Container>
     );

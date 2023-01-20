@@ -2,6 +2,7 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import React, { useEffect, useState, useRef } from 'react';
+import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
 
 interface WaveformOptions {
@@ -11,6 +12,9 @@ interface WaveformOptions {
     barWidth: number,
     barHeight: number,
     normalize: boolean,
+
+    enableRegions?: boolean,
+    regions?: RegionParams[],
 }
 
 interface WaveformCallbacks {
@@ -27,6 +31,10 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & { position: numbe
     const containerOneSelected = useRef<boolean>(true);
     const waveformParentContainer = useRef<HTMLDivElement>(null);
 
+    if (props.enableRegions !== undefined && props.regions !== undefined && props.regions.length !== 0) {
+
+    }
+
     // Helper function to generate params based off of waveformOptions and default values
     const paramMaker = (waveformContainer: HTMLDivElement) => ({
         barHeight: props.barHeight,
@@ -36,7 +44,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & { position: numbe
         cursorWidth: 0,
         container: waveformContainer,
         backend: 'WebAudio',
-        //audioContext: props.audioContext,
+        audioContext: props.audioContext,
         closeAudioContext: false,
         removeMediaElementOnDestroy: false,
         responsive: false,

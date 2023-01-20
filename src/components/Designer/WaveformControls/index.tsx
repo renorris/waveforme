@@ -14,23 +14,31 @@ interface WaveformControlsCallbacks {
     barHeightRangeChangeCallback: (value: number) => void,
     barWidthRangeChangeCallback: (value: number) => void,
     barGapRangeChangeCallback: (value: number) => void,
+    trimCallback: () => void,
 }
 
 function WaveformControls(props: WaveformControlsCallbacks & { waveformOptions: WaveformOptions }) {
     return (
         <Container
+            fluid
             id='mainControlsContainer'
             className='d-flex flex-column justify-content-center align-items-center'
         >
 
             <Container
                 id='playPauseRowContainer'
-                className='d-flex flex-row gap-2 justify-content-center align-items-center mt-2'>
+                className='d-flex flex-row gap-3 justify-content-center align-items-center mt-1'>
                 <Button
                     onClick={props.playButtonClickCallback}
                     variant={props.waveformOptions.playing ? 'danger' : 'success'}
                 >
                     {props.waveformOptions.playing ? 'Pause' : 'Play'}
+                </Button>
+                <Button
+                    onClick={props.trimCallback}
+                    variant='primary'
+                >
+                    Trim
                 </Button>
             </Container>
 
@@ -42,9 +50,9 @@ function WaveformControls(props: WaveformControlsCallbacks & { waveformOptions: 
                 <Container
                     id='leftButtonsContainer'
                     className='d-flex flex-column gap-2 justify-content-start align-items-start p-0'>
-                    <Button variant='outline-secondary'>Button 1</Button>
-                    <Button variant='outline-secondary'>Button 2</Button>
-                    <Button variant='outline-secondary'>Button 3</Button>
+                    <Button variant='outline-secondary'>Option 1</Button>
+                    <Button variant='outline-secondary'>Option 2</Button>
+                    <Button variant='outline-secondary'>Option 3</Button>
                 </Container>
 
                 <Container

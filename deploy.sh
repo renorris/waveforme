@@ -1,6 +1,9 @@
 # Waveforme deploy.sh
 # Copyright (C) 2023 Reese Norris - All Rights Reserved
 
+# Kill dist
+rm -r dist
+
 # Build browser dist files
 echo "Building browser files"
 webpack --config webpack.config.browser.js --env IS_OFFLINE=false
