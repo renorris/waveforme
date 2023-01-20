@@ -23,7 +23,7 @@ module.exports = (env) => {
         target: 'web',
 
         optimization: {
-            minimize: isLocal ? false : true,
+            minimize: false,
             runtimeChunk: 'single',
             splitChunks: {
                 chunks: 'async',

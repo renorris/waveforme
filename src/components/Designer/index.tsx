@@ -82,8 +82,8 @@ function Designer() {
             setWaveformOptions(Object.assign({}, waveformOptions, { barGap: value }));
         },
         trimCallback: () => {
-            setIsTrimmerEnabled(!isTrimmerEnabled);
-            setShouldDisplayWaveform(!shouldDisplayWaveform);
+            setIsTrimmerEnabled(true);
+            setShouldDisplayWaveform(false);
         },
     };
 
@@ -96,6 +96,10 @@ function Designer() {
             const arrayBuffer = await file.arrayBuffer();
             audioBufferRef.current = await audioContextRef.current!.decodeAudioData(arrayBuffer);
             audioFile.current = file;
+
+            waveformPosition.current = 0;
+
+            setWaveformOptions(Object.assign({}, waveformOptions, { playing: false }));
             setIsTrimmerEnabled(false);
             setShouldDisplayWaveform(true);
         }
