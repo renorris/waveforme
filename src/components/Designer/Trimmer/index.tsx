@@ -7,6 +7,7 @@ import TrimmerControls, { TrimmerControlsCallbacks } from '../TrimmerControls';
 
 interface TrimmerOptions {
     file: File,
+    duration: number,
 }
 
 interface TrimmerCallbacks {
@@ -45,15 +46,16 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
             console.log('Running FFmpeg');
             const ffmpeg = await import('ffmpeg.js/ffmpeg-mp4');
 
-            let audio = document.createElement('audio');
-            console.log(`file = ${props.file.name}`);
-            audio.src = URL.createObjectURL(props.file);
-            await new Promise(resolve => audio.onloadedmetadata = () => resolve(true));
-            let duration = audio.duration;
+            //let audio = document.createElement('audio');
+            //audio.preload = 'metadata';
+            //console.log(`file = ${props.file.name}`);
+            //audio.src = URL.createObjectURL(props.file);
+            //await new Promise(resolve => audio.onloadedmetadata = () => resolve(true));
+            //let duration = audio.duration;
             
-            console.log(`duration = ${duration}`);
-            console.log(`lowEndRef string = ${(lowEndRef.current * duration).toFixed(4).toString()}`);
-            console.log(`highEndRef string = ${(highEndRef.current * duration).toFixed(4).toString()}`);
+            console.log(`duration = ${props.duration}`);
+            console.log(`lowEndRef string = ${(lowEndRef.current * props.duration).toFixed(4).toString()}`);
+            console.log(`highEndRef string = ${(highEndRef.current * props.duration).toFixed(4).toString()}`);
 
             let stderr: string;
             let stdout: string;
@@ -64,9 +66,9 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
                 arguments: [
                                 "-y",
                                 "-ss", 
-                                (lowEndRef.current * duration).toFixed(4).toString(), 
+                                (lowEndRef.current * props.duration).toFixed(4).toString(), 
                                 "-to", 
-                                (highEndRef.current * duration).toFixed(4).toString(),
+                                (highEndRef.current * props.duration).toFixed(4).toString(),
                                 "-i", 
                                 props.file.name, 
                                 "-threads", 

@@ -98,8 +98,8 @@ function Designer() {
             audioFile.current = file;
 
             waveformPosition.current = 0;
-
             setWaveformOptions(Object.assign({}, waveformOptions, { playing: false }));
+            
             setIsTrimmerEnabled(false);
             setShouldDisplayWaveform(true);
         }
@@ -131,6 +131,7 @@ function Designer() {
             {!shouldDisplayWaveform && isTrimmerEnabled &&
                 <Trimmer
                     {...trimmerCallbacks}
+                    duration={audioBufferRef.current!.duration}
                     file={audioFile.current!}
                 >
                     <Waveform
