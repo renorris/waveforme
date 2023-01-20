@@ -32,6 +32,10 @@ function AudioUploader(props: AudioUploaderCallbacks) {
         // Async ffmpeg runner to be called later
         const runFfmpeg = async () => {
             console.log('Running FFmpeg');
+            
+            // Sleeping to let DOM update
+            await new Promise(r => setTimeout(r, 100));
+            
             const ffmpeg = await import('ffmpeg.js/ffmpeg-mp4');
             
             let stderr: string;
