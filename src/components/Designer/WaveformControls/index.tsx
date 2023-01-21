@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import FormRange from 'react-bootstrap/esm/FormRange'
 import Button from 'react-bootstrap/esm/Button';
-import Container from 'react-bootstrap/esm/Container';
+import { Container, Row, Col } from 'react-bootstrap';
 import Modal from 'react-bootstrap/esm/Modal';
 import { Pause, PlayFill, Scissors, ArrowCounterclockwise } from 'react-bootstrap-icons';
 
@@ -32,67 +32,39 @@ function WaveformControls(props: WaveformControlsCallbacks & { waveformOptions: 
     }
 
     return (
-        <Container
-            fluid
-            id='mainControlsContainer'
-            className='d-flex flex-column justify-content-center align-items-center'
-        >
-            <Container
-                id='playPauseRowContainer'
-                className='d-flex flex-row gap-3 justify-content-center align-items-center mt-1'>
+        <Container fluid className='justify-content-center align-items-center'>
+            <Row className='justify-content-center mt-1'>
+                <Col xs='4' md='auto' className='d-flex justify-content-center ps-0 pe-1'>
+                    <Button style={{ width: '100%' }} onClick={() => setShowRevertModal(true)} variant='warning'>
+                        <ArrowCounterclockwise size={25} />
+                    </Button>
+                </Col>
 
-                <Button
-                    className='d-flex flex-row justify-content-center align-items-center'
-                    onClick={props.playButtonClickCallback}
-                    variant={props.waveformOptions.playing ? 'danger' : 'success'}
-                >
-                    {props.waveformOptions.playing ? <Pause size={25} /> : <PlayFill size={25} />}
-                </Button>
+                <Col xs='4' md='auto' className='d-flex justify-content-center px-1'>
+                    <Button style={{ width: '100%' }} onClick={props.trimCallback} variant='primary'>
+                        <Scissors size={25} style={{ transform: 'rotate(90deg)' }} />
+                    </Button>
+                </Col>
 
-                <Button
-                    onClick={props.trimCallback}
-                    variant='primary'
-                >
-                    <Scissors
-                        size={25}
-                        style={{ transform: 'rotate(90deg)' }}
-                    />
-                </Button>
+                <Col xs='4' md='auto' className='d-flex justify-content-center pe-0 ps-1'>
+                    <Button style={{ width: '100%' }} onClick={props.playButtonClickCallback} variant={props.waveformOptions.playing ? 'danger' : 'success'}>
+                        {props.waveformOptions.playing ? <Pause size={25} /> : <PlayFill size={25} />}
+                    </Button>
+                </Col>
+            </Row>
 
-                <Button
-                    onClick={() => setShowRevertModal(true)}
-                    variant='warning'
-                >
-                    <ArrowCounterclockwise
-                        size={25}
-                    />
-                </Button>
-            </Container>
-
-            <Container
-                id='waveformControlsContainer'
-                className='d-flex flex-row justify-content-center align-items-center mt-2'
-            >
-
-                <Container
-                    fluid
-                    id='leftButtonsContainer'
-                    className='d-flex flex-column gap-2 justify-content-start align-items-start p-0'>
+            <Row className='mt-4'>
+                <Col className='gap-1 p-0'>
                     <Button
                         variant={props.waveformOptions.normalize ? 'primary' : 'outline-danger'}
                         onClick={props.normalizeButtonClickCallback}
                     >
                         Normalize
                     </Button>
-                </Container>
+                </Col>
 
-                <Container
-                    id='rangeSelectorContainer'
-                    className='d-flex flex-column gap-2 justify-content-start align-items-start p-0'
-                >
-                    <div
-                        className={props.waveformOptions.normalize ? 'fw-lighter' : ''}
-                    >
+                <Col className='gap-1 p-0'>
+                    <div className={props.waveformOptions.normalize ? 'fw-lighter' : ''}>
                         {props.waveformOptions.normalize ? 'Normalized' : 'Intensity'}
                     </div>
                     <FormRange
@@ -122,11 +94,11 @@ function WaveformControls(props: WaveformControlsCallbacks & { waveformOptions: 
                         step='0.01'
                         onChange={event => props.barGapRangeChangeCallback(parseFloat(event.target.value))}
                     />
-                </Container>
-            </Container>
+                </Col>
+            </Row>
 
-            <Modal 
-                show={showRevertModal} 
+            <Modal
+                show={showRevertModal}
                 onHide={() => setShowRevertModal(false)}
                 aria-labelledby="contained-modal-title-vcenter"
                 centered
@@ -144,7 +116,7 @@ function WaveformControls(props: WaveformControlsCallbacks & { waveformOptions: 
                     <Button variant='success' onClick={() => setShowRevertModal(false)}>
                         Cancel
                     </Button>
-                    <Button variant='warning' onClick={() => revertButtonHandler() }>
+                    <Button variant='warning' onClick={() => revertButtonHandler()}>
                         Yes
                     </Button>
                 </Modal.Footer>

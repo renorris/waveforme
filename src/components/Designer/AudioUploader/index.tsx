@@ -2,7 +2,7 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Container } from 'react-bootstrap';
+import { Col, Container, Row } from 'react-bootstrap';
 import { InfoCircle } from 'react-bootstrap-icons';
 
 interface AudioUploaderCallbacks {
@@ -67,31 +67,46 @@ function AudioUploader(props: AudioUploaderCallbacks) {
 
     }, [file]);
 
+    // DEV:
+    useEffect(() => {
+        //setIsAudioExtracting(true);
+    }, []);
+
     return (
         <>
-            {!audioReady &&
-                <div>
+            {!audioReady && !isAudioExtracting &&
+                <>
+                    <Row className='mt-2'>
+                        <h2>Design your Waveforme</h2>
+                    </Row>
+                    <Row className='mt-2'>
+                        <h5>Choose an audio or video file</h5>
+                    </Row>
                     <input
                         id='formFile'
-                        className='form-control'
+                        className='form-control mt-3'
+                        style={{ maxWidth: '384px' }}
                         type='file'
                         accept='audio/*,video/*'
                         onClick={event => { touchFfmpeg(); touchWavesurfer(); }}
                         onChange={(event) => handleFileUpload(event)}
                     />
-                </div>
+                </>
             }
 
             {isAudioExtracting &&
-                <Container
-                    className='d-flex flex-column justify-content-center align-items-center gap-2 mt-3'
-                >
-                    <h3>Extracting Audio...</h3>
-                    <Container className='fw-light d-flex flex-row justify-content-start align-items-center p-0 gap-2'>
-                        <InfoCircle size={15} />
-                        This might take a while depending on your file size and network speed
-                    </Container>
-                </Container>
+                <>
+                    <Row className='mt-2'>
+                        <h3>Extracting Audio...</h3>
+                    </Row>
+                    <Row className='mt-2'>
+                        <Col className='d-flex align-items-center gap-2 text-wrap fw-light'>
+                            <InfoCircle height={'auto'} />
+                            <Col>This might take a while depending on your file size and network speed</Col>
+                        </Col>
+                    </Row>
+
+                </>
             }
         </>
     );

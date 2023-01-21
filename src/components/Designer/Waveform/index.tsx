@@ -2,6 +2,7 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import React, { useEffect, useState, useRef } from 'react';
+import { Container } from 'react-bootstrap';
 import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
 
@@ -20,15 +21,15 @@ interface WaveformCallbacks {
     seekWavesurferCallback: (progress: number) => void,
 }
 
-function Waveform(props: WaveformOptions & WaveformCallbacks & 
-    {
-        position: number,
-        audioContext: AudioContext,
-        audioBuffer: AudioBuffer,
-        regions?: RegionParams[],
-        playEnd?: number,
-    }
-    ) {
+function Waveform(props: WaveformOptions & WaveformCallbacks &
+{
+    position: number,
+    audioContext: AudioContext,
+    audioBuffer: AudioBuffer,
+    regions?: RegionParams[],
+    playEnd?: number,
+}
+) {
 
     const wavesurfer = useRef<WaveSurfer | null>(null);
     const waveformContainer1 = useRef<HTMLDivElement>(null);
@@ -58,7 +59,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks &
 
     // Waveform renderer
     useEffect(() => {
-        
+
         // Async render function to be called later
         const render = async () => {
             console.log('Rendering waveform');
@@ -114,9 +115,9 @@ function Waveform(props: WaveformOptions & WaveformCallbacks &
 
             // Add regions if regions were passed in props
             if (props.regions !== undefined && props.regions.length > 0) {
-                
+
                 console.log('Building regions');
-                
+
                 const RegionsPlugin = (await import('wavesurfer.js/src/plugin/regions')).default;
 
                 const regionsPluginParams: RegionsPluginParams = {
@@ -135,7 +136,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks &
 
             // Set cursor position
             newWavesurfer.seekTo((1 / newWavesurfer.getDuration()) * props.position);
-            
+
             // Play the waveform if props deem so
             if (props.playing) newWavesurfer.play();
 
@@ -163,15 +164,15 @@ function Waveform(props: WaveformOptions & WaveformCallbacks &
         render();
 
     }, [
-            props.barGap,
-            props.barHeight,
-            props.barWidth,
-            props.normalize,
-            props.heightMultiplier,
-            props.playing,
-            props.audioBuffer,
-            props.regions,
-        ]);
+        props.barGap,
+        props.barHeight,
+        props.barWidth,
+        props.normalize,
+        props.heightMultiplier,
+        props.playing,
+        props.audioBuffer,
+        props.regions,
+    ]);
 
     // Event handlers
     const handleAudioProcess = () => {
@@ -194,19 +195,24 @@ function Waveform(props: WaveformOptions & WaveformCallbacks &
     });
 
     return (
-        <div
-            ref={waveformParentContainer}
-            style={{ width: '100%' }}
-        >
+        <>
+            <Container fluid className='d-flex justify-content-start align-items-center mb-1'>
+                <h6 className='fw-light fst-italic m-0 p-0'>Waveforme Preview</h6>
+            </Container>
             <div
-                id='waveform-1'
-                ref={waveformContainer1}
-            />
-            <div
-                id='waveform-2'
-                ref={waveformContainer2}
-            />
-        </div>
+                ref={waveformParentContainer}
+                style={{ width: '100%' }}
+            >
+                <div
+                    id='waveform-1'
+                    ref={waveformContainer1}
+                />
+                <div
+                    id='waveform-2'
+                    ref={waveformContainer2}
+                />
+            </div>
+        </>
     )
 }
 

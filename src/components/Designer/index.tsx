@@ -242,10 +242,15 @@ function Designer() {
     // Fix weird state bug by only allowing selectionChangeCallback to run if selectingCallback ran immediately prior
     const isSelecting = useRef<boolean>(false);
 
+    // DEV:
+    useEffect(() => {
+        //setShouldDisplayWaveform(true);
+    }, []);
+
     return (
         <Container
-            className='d-flex flex-column justify-content-center align-items-center'
-            style={{ maxWidth: '512px' }}
+            className='d-flex flex-column justify-content-center align-items-center mt-2'
+            style={{ maxWidth: '640px' }}
         >
             {!shouldDisplayWaveform && !isTrimmerEnabled &&
                 <AudioUploader {...audioUploaderCallbacks} />
