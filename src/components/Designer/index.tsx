@@ -133,43 +133,53 @@ function Designer() {
             // Fired on completed selection change in trimmer. 
             // 1. setPlayEnd to play a short clip of the selected spot for better UX.
 
+            // Only run if isSelecting = true
+            if (!isSelecting.current) {
+                return;
+            }
+
             console.log(`Running trimSelectionChangeCallback: primaryVal = ${primaryVal}, isStart = ${isStart}`);
             
             // -- ENTER -- (((Logic Hell))):
 
             const bufferSecs = 1.5;
+            const primaryValTime = primaryVal * audioBuffer!.duration;
+            const comparatorValTime = comparatorVal * audioBuffer!.duration;
 
             if (isStart) {
                 // Set play position right at the starting point if user has modified the start position
-                waveformPosition.current = primaryVal * audioBuffer!.duration;
+                waveformPosition.current = primaryValTime;
 
                 // Set play end to bufferSecs seconds past the starting point ONLY IF
                 // the difference is less than bufferSecs seconds.
-                if (((comparatorVal * audioBuffer!.duration) - (primaryVal * audioBuffer!.duration)) > bufferSecs) {
-                    trimmerPlayEndRef.current = (primaryVal * audioBuffer!.duration) + bufferSecs;
+                if (((comparatorValTime) - (primaryValTime)) > bufferSecs) {
+                    trimmerPlayEndRef.current = (primaryValTime) + bufferSecs;
                 }
                 else {
                     // Else just set it to the comparator value so it stops playing at the 
                     // end of the selection.
-                    trimmerPlayEndRef.current = (comparatorVal * audioBuffer!.duration);
+                    trimmerPlayEndRef.current = (comparatorValTime);
                 }
             }
             else {
                 // Else set play position bufferSecs seconds before the end ONLY IF
                 // the difference is less than bufferSecs seconds.
                 // snippet of where their audio is trimmed at
-                if (((primaryVal * audioBuffer!.duration) - (comparatorVal * audioBuffer!.duration)) > bufferSecs) {
-                    waveformPosition.current = (primaryVal * audioBuffer!.duration) - bufferSecs;
+                if (((primaryValTime) - (comparatorValTime)) > bufferSecs) {
+                    waveformPosition.current = (primaryValTime) - bufferSecs;
                 }
                 else {
                     // Else just set it to the comparator value so it start playing at the 
                     // end of the selection.
-                    waveformPosition.current = (comparatorVal * audioBuffer!.duration);
+                    waveformPosition.current = (comparatorValTime);
                 }
 
                 // Set play end to the end selection
-                trimmerPlayEndRef.current = primaryVal * audioBuffer!.duration;
+                trimmerPlayEndRef.current = primaryValTime;
             }
+
+            // Set isSelecting to false
+            isSelecting.current = false;
 
             setWaveformOptions(Object.assign({}, waveformOptions, { playing: true }));
         },
@@ -214,6 +224,12 @@ function Designer() {
             // Set position to 0
             waveformPosition.current = 0;
 
+            // Null out playEnd
+            trimmerPlayEndRef.current = null;
+
+            // Set isSelecting
+            isSelecting.current = true;
+
             console.log(`Setting trimmerRegions to [regionParams]`);
             setTrimmerRegions([regionParams]);
         }
@@ -222,6 +238,9 @@ function Designer() {
     // Trimmer-specific refs to pass into waveform
     const [trimmerRegions, setTrimmerRegions] = useState<RegionParams[]>([]);
     const trimmerPlayEndRef = useRef<number | null>(null);
+
+    // Fix weird state bug by only allowing selectionChangeCallback to run if selectingCallback ran immediately prior
+    const isSelecting = useRef<boolean>(false);
 
     return (
         <Container

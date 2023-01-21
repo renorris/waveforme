@@ -64,7 +64,8 @@ function TrimmerControls(props: TrimmerControlsCallbacks) {
                 max='1'
                 defaultValue='0.3'
                 step='0.001'
-                onChange={handleSelecting}
+                onInput={handleSelecting}
+                onTouchEnd={() => handleSelectionChange(true)}
                 onMouseUp={() => handleSelectionChange(true)}
             />
             <FormRange
@@ -74,7 +75,8 @@ function TrimmerControls(props: TrimmerControlsCallbacks) {
                 max='1'
                 defaultValue='0.7'
                 step='0.001'
-                onChange={handleSelecting}
+                onInput={handleSelecting}
+                onTouchEnd={() => handleSelectionChange(false)}
                 onMouseUp={() => handleSelectionChange(false)}
             />
             <Container className='fw-light d-flex flex-row justify-content-start align-items-center p-0 gap-2'>
