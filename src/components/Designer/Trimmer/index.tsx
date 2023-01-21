@@ -12,6 +12,8 @@ interface TrimmerOptions {
 
 interface TrimmerCallbacks {
     trimCompleteCallback: (file: File) => void,
+    trimSelectionChangeCallback: (primaryVal: number, comparatorVal: number, isStart: boolean) => void,
+    trimSelectingCallback: (val1: number, val2: number) => void,
 }
 
 function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallbacks) {
@@ -35,7 +37,17 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
             console.log(`lowEndRef = ${lowEndRef.current}`);
             console.log(`highEndRef = ${highEndRef.current}`);
             setShouldTrimAudio(true);
-        }
+        },
+
+        selectionChangeCallback: (primaryVal, comparatorVal, isStart) => {
+            // Forward along to parent component
+            props.trimSelectionChangeCallback(primaryVal, comparatorVal, isStart);
+        },
+
+        selectingCallback: (val1, val2) => {
+            // Forward along to parent component
+            props.trimSelectingCallback(val1, val2);
+        },
     }
 
     // FFmpeg trim on signal
@@ -56,38 +68,34 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
             //audio.src = URL.createObjectURL(props.file);
             //await new Promise(resolve => audio.onloadedmetadata = () => resolve(true));
             //let duration = audio.duration;
-            
+
             console.log(`duration = ${props.duration}`);
             console.log(`lowEndRef string = ${(lowEndRef.current * props.duration).toFixed(4).toString()}`);
             console.log(`highEndRef string = ${(highEndRef.current * props.duration).toFixed(4).toString()}`);
 
-            let stderr: string;
-            let stdout: string;
             let result = ffmpeg.default({
                 MEMFS: [{ name: props.file.name, data: new Uint8Array(await props.file.arrayBuffer()) }],
-                print: function (data) { stdout += data + "\n"; },
-                printErr: function (data) { stderr += data + "\n"; },
+                print: function (data) { console.log(data + "\n"); },
+                printErr: function (data) { console.log(data + "\n"); },
                 arguments: [
-                                "-y",
-                                "-ss", 
-                                (lowEndRef.current * props.duration).toFixed(4).toString(), 
-                                "-to", 
-                                (highEndRef.current * props.duration).toFixed(4).toString(),
-                                "-i", 
-                                props.file.name, 
-                                "-threads", 
-                                "1", 
-                                "-c:a", 
-                                "copy", 
-                                "out.mp3"
-                            ],
+                    "-y",
+                    "-ss",
+                    (lowEndRef.current * props.duration).toFixed(4).toString(),
+                    "-to",
+                    (highEndRef.current * props.duration).toFixed(4).toString(),
+                    "-i",
+                    props.file.name,
+                    "-threads",
+                    "1",
+                    "-c:a",
+                    "copy",
+                    "out.mp3"
+                ],
                 onExit: function (code) {
                     console.log("Process exited with code " + code);
-                    console.log(stdout);
-                    console.log(stderr);
                 },
             });
-            
+
             setShouldTrimAudio(false);
             props.trimCompleteCallback(new File([result.MEMFS[0].data], 'audio.mp3'));
         }
@@ -99,17 +107,19 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
     }, [shouldTrimAudio]);
 
     return (
-        <> 
+        <>
             {props.children}
 
             {!shouldTrimAudio &&
-                <TrimmerControls 
+                <TrimmerControls
                     {...trimmerControlsCallbacks}
                 />
             }
 
             {shouldTrimAudio &&
-                <h3>Trimming your audio...</h3>
+                <>
+                    <h3>Trimming your audio...</h3>
+                </>
             }
         </>
     )

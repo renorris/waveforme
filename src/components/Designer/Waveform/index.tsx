@@ -2,7 +2,7 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import React, { useEffect, useState, useRef } from 'react';
-import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
+import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
 
 interface WaveformOptions {
@@ -12,9 +12,6 @@ interface WaveformOptions {
     barWidth: number,
     barHeight: number,
     normalize: boolean,
-
-    enableRegions?: boolean,
-    regions?: RegionParams[],
 }
 
 interface WaveformCallbacks {
@@ -23,17 +20,21 @@ interface WaveformCallbacks {
     seekWavesurferCallback: (progress: number) => void,
 }
 
-function Waveform(props: WaveformOptions & WaveformCallbacks & { position: number, audioContext: AudioContext, audioBuffer: AudioBuffer }) {
+function Waveform(props: WaveformOptions & WaveformCallbacks & 
+    {
+        position: number,
+        audioContext: AudioContext,
+        audioBuffer: AudioBuffer,
+        regions?: RegionParams[],
+        playEnd?: number,
+    }
+    ) {
 
     const wavesurfer = useRef<WaveSurfer | null>(null);
     const waveformContainer1 = useRef<HTMLDivElement>(null);
     const waveformContainer2 = useRef<HTMLDivElement>(null);
     const containerOneSelected = useRef<boolean>(true);
     const waveformParentContainer = useRef<HTMLDivElement>(null);
-
-    if (props.enableRegions !== undefined && props.regions !== undefined && props.regions.length !== 0) {
-
-    }
 
     // Helper function to generate params based off of waveformOptions and default values
     const paramMaker = (waveformContainer: HTMLDivElement) => ({
@@ -61,6 +62,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & { position: numbe
         // Async render function to be called later
         const render = async () => {
             console.log('Rendering waveform');
+            console.log(props);
 
             // Async load wavesurfer
             const WaveSurfer = (await import('wavesurfer.js')).default;
@@ -110,11 +112,38 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & { position: numbe
                 wavesurfer.current!.destroy();
             }
 
+            // Add regions if regions were passed in props
+            if (props.regions !== undefined && props.regions.length > 0) {
+                
+                console.log('Building regions');
+                
+                const RegionsPlugin = (await import('wavesurfer.js/src/plugin/regions')).default;
+
+                const regionsPluginParams: RegionsPluginParams = {
+                    dragSelection: false,
+                    snapToGridInterval: undefined,
+                    snapToGridOffset: undefined,
+                    edgeScrollWidth: undefined,
+                }
+
+                newWavesurfer.addPlugin(RegionsPlugin.create(regionsPluginParams));
+
+                props.regions.forEach(params => {
+                    newWavesurfer.addRegion(params);
+                });
+            }
+
             // Set cursor position
             newWavesurfer.seekTo((1 / newWavesurfer.getDuration()) * props.position);
             
             // Play the waveform if props deem so
             if (props.playing) newWavesurfer.play();
+
+            // Set the play end if passed in props
+            if (props.playEnd !== undefined) {
+                newWavesurfer.setPlayEnd(props.playEnd);
+                newWavesurfer.on('pause', handleFinish);
+            }
 
             // Swap selected container
             console.log(`Current selection before swapping = ${containerOneSelected.current}`);
@@ -141,6 +170,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & { position: numbe
             props.heightMultiplier,
             props.playing,
             props.audioBuffer,
+            props.regions,
         ]);
 
     // Event handlers
