@@ -2,7 +2,7 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Col, Container, Row } from 'react-bootstrap';
+import { Button, Col, Container, Modal, Row, Stack } from 'react-bootstrap';
 import { InfoCircle } from 'react-bootstrap-icons';
 
 interface AudioUploaderCallbacks {
@@ -14,11 +14,13 @@ function AudioUploader(props: AudioUploaderCallbacks) {
     const [file, setFile] = useState<File | null>(null);
     const [isAudioExtracting, setIsAudioExtracting] = useState<boolean>(false);
     const [audioReady, setAudioReady] = useState<boolean>(false);
+    const [showAudioTrimHelp, setShowAudioTrimHelp] = useState<boolean>(false);
 
     // Set file state and signal ffmpeg to decode
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files!.item(0)!;
         console.log(`Handling file upload: ${file.name} (${file.type})`);
+
         setIsAudioExtracting(true);
         setFile(file);
     }
@@ -49,7 +51,7 @@ function AudioUploader(props: AudioUploaderCallbacks) {
                 MEMFS: [{ name: file!.name, data: new Uint8Array(await file!.arrayBuffer()) }],
                 print: function (data) { console.log(data + "\n") },
                 printErr: function (data) { console.log(data + "\n"); },
-                arguments: ["-i", file!.name, "-threads", "1", "-vn", "-ac", "1", "-b:a", "96k", "audio.mp3"],
+                arguments: ["-i", file!.name, "-threads", "1", "-vn", "-ac", "1", "-b:a", "128k", "audio.mp3"],
                 onExit: function (code) {
                     console.log("Process exited with code " + code);
                 },
@@ -75,23 +77,72 @@ function AudioUploader(props: AudioUploaderCallbacks) {
     return (
         <>
             {!audioReady && !isAudioExtracting &&
-                <>
-                    <Row className='mt-2'>
-                        <h2>Design your Waveforme</h2>
-                    </Row>
-                    <Row className='mt-2'>
-                        <h5>Choose an audio or video file</h5>
-                    </Row>
-                    <input
-                        id='formFile'
-                        className='form-control mt-3'
-                        style={{ maxWidth: '384px' }}
-                        type='file'
-                        accept='audio/*,video/*'
-                        onClick={event => { touchFfmpeg(); touchWavesurfer(); }}
-                        onChange={(event) => handleFileUpload(event)}
-                    />
-                </>
+                <Container className='justify-content-center align-items-center'>
+                    <Col>
+                        <Row className='text-center mt-2'>
+                            <h2>Design your Waveforme</h2>
+                        </Row>
+
+                        <Row className='text-center mt-2'>
+                            <h5>Choose an audio or video file</h5>
+                        </Row>
+
+                        <Row className='justify-content-center text-center'>
+                            <input
+                                id='formFile'
+                                className='form-control mt-3'
+                                //style={{ maxWidth: '384px' }}
+                                type='file'
+                                accept='audio/*,video/*'
+                                onClick={event => { touchFfmpeg(); touchWavesurfer(); }}
+                                onChange={(event) => handleFileUpload(event)}
+                            />
+                        </Row>
+
+                        <Row className='justify-content-start fw-lighter'>
+                            Supported files: .mp4, .mov, .mp3, .m4a, .ogg, .wav
+                        </Row>
+
+                        <Row className='mt-3'>
+                            <Col className='d-flex justify-content-center align-items-center text-wrap fw-light p-0'>
+                                <InfoCircle height={'auto'} />
+                                <Col className='ms-2'>
+                                    For the best experience possible, a <span className='fw-semibold'>one minute</span> upload limit is enforced.&nbsp;
+                                    <span style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }} onClick={() => setShowAudioTrimHelp(true)}>Need help?</span>
+                                </Col>
+                            </Col>
+                        </Row>
+
+                        <Row className='mt-1'>
+                            <Col className='d-flex justify-content-center align-items-center text-wrap fw-light p-0'>
+                                <InfoCircle height={'auto'} />
+                                <Col className='ms-2'>Shorter files produce a higher Waveforme resolution.</Col>
+                            </Col>
+                        </Row>
+                    </Col>
+
+                    <Modal
+                        show={showAudioTrimHelp}
+                        onHide={() => setShowAudioTrimHelp(false)}
+                        aria-labelledby="contained-modal-title-vcenter"
+                        centered
+                    >
+                        <Modal.Header closeButton>
+                            <Modal.Title className='text-center'>Trimming your file</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <Stack className='text-center'>
+                                <div>This pop-up will contain instructions on how to trim a file to meet the one minute upload limit.</div>
+                            </Stack>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button variant='success' onClick={() => setShowAudioTrimHelp(false)}>
+                                Okay
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+
+                </Container>
             }
 
             {isAudioExtracting &&

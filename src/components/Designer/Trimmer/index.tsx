@@ -6,37 +6,88 @@ import React, { useEffect, useState, useRef } from 'react';
 import TrimmerControls, { TrimmerControlsCallbacks } from '../TrimmerControls';
 
 interface TrimmerOptions {
-    file: File,
+    audioContext: AudioContext,
+    audioBuffer: AudioBuffer,
     duration: number,
 }
 
 interface TrimmerCallbacks {
-    trimCompleteCallback: (file: File) => void,
+    trimCompleteCallback: (audioBuffer: AudioBuffer) => void,
     trimSelectionChangeCallback: (primaryVal: number, comparatorVal: number, isStart: boolean) => void,
     trimSelectingCallback: (val1: number, val2: number) => void,
 }
 
 function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallbacks) {
 
-    const [shouldTrimAudio, setShouldTrimAudio] = useState<boolean>(false);
-    const lowEndRef = useRef<number>(0);
-    const highEndRef = useRef<number>(1);
+    /*
+        AUDIO BUFFER SLICER
+    */
+
+    const sliceAudioBuffer = (buffer: AudioBuffer, beginSec: number, endSec: number): AudioBuffer => {
+        const duration = buffer.duration;
+        const channels = buffer.numberOfChannels;
+        const rate = buffer.sampleRate;
+
+        if (beginSec < 0) {
+            throw new Error('Begin time must be greater than zero!');
+        }
+
+        if (endSec > duration) {
+            throw new Error(`End time (${endSec} sec) must be less than or equal to buffer duration (${duration} sec)`);
+        }
+
+        const startOffset = rate * beginSec;
+        const endOffset = rate * endSec;
+        const sampleCount = endOffset - startOffset;
+
+        let newAudioBuffer: AudioBuffer;
+
+        try {
+            newAudioBuffer = props.audioContext.createBuffer(channels, sampleCount, rate);
+            const tempArray = new Float32Array(sampleCount);
+
+            for (let channel = 0; channel < channels; channel++) {
+                buffer.copyFromChannel(tempArray, channel, startOffset);
+                newAudioBuffer.copyToChannel(tempArray, channel, 0);
+            }
+        }
+        catch (error) {
+            throw new Error(error);
+        }
+
+        return newAudioBuffer;
+    }
+
+
+
+    /*
+        TRIMMER CONTROLS
+    */
 
     const trimmerControlsCallbacks: TrimmerControlsCallbacks = {
         trimButtonCallback: (val1, val2) => {
             console.log(`val1 = ${val1}`);
             console.log(`val2 = ${val2}`);
-            if (val1 > val2) {
-                highEndRef.current = val1;
-                lowEndRef.current = val2;
+
+            let startPos = 0;
+            let endPos = 1;
+
+            if (val1 >= val2) {
+                endPos = val1;
+                startPos = val2;
             }
             else {
-                lowEndRef.current = val1;
-                highEndRef.current = val2;
+                startPos = val1;
+                endPos = val2;
             }
-            console.log(`lowEndRef = ${lowEndRef.current}`);
-            console.log(`highEndRef = ${highEndRef.current}`);
-            setShouldTrimAudio(true);
+
+            const startTime = startPos * props.audioBuffer.duration;
+            const endTime = endPos * props.audioBuffer.duration;
+
+            console.log(`startTime = ${startTime}`);
+            console.log(`endTime = ${endTime}`);
+
+            props.trimCompleteCallback(sliceAudioBuffer(props.audioBuffer, startTime, endTime));
         },
 
         selectionChangeCallback: (primaryVal, comparatorVal, isStart) => {
@@ -50,77 +101,12 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
         },
     }
 
-    // FFmpeg trim on signal
-    useEffect(() => {
-
-        // Async ffmpeg runner to be called later
-        const runFfmpeg = async () => {
-            console.log('Running FFmpeg');
-
-            // Sleeping to let DOM update
-            await new Promise(r => setTimeout(r, 100));
-
-            const ffmpeg = await import('ffmpeg.js/ffmpeg-mp4');
-
-            //let audio = document.createElement('audio');
-            //audio.preload = 'metadata';
-            //console.log(`file = ${props.file.name}`);
-            //audio.src = URL.createObjectURL(props.file);
-            //await new Promise(resolve => audio.onloadedmetadata = () => resolve(true));
-            //let duration = audio.duration;
-
-            console.log(`duration = ${props.duration}`);
-            console.log(`lowEndRef string = ${(lowEndRef.current * props.duration).toFixed(4).toString()}`);
-            console.log(`highEndRef string = ${(highEndRef.current * props.duration).toFixed(4).toString()}`);
-
-            let result = ffmpeg.default({
-                MEMFS: [{ name: props.file.name, data: new Uint8Array(await props.file.arrayBuffer()) }],
-                print: function (data) { console.log(data + "\n"); },
-                printErr: function (data) { console.log(data + "\n"); },
-                arguments: [
-                    "-y",
-                    "-ss",
-                    (lowEndRef.current * props.duration).toFixed(4).toString(),
-                    "-to",
-                    (highEndRef.current * props.duration).toFixed(4).toString(),
-                    "-i",
-                    props.file.name,
-                    "-threads",
-                    "1",
-                    "-c:a",
-                    "copy",
-                    "out.mp3"
-                ],
-                onExit: function (code) {
-                    console.log("Process exited with code " + code);
-                },
-            });
-
-            setShouldTrimAudio(false);
-            props.trimCompleteCallback(new File([result.MEMFS[0].data], 'audio.mp3'));
-        }
-
-        if (shouldTrimAudio) {
-            runFfmpeg();
-        }
-
-    }, [shouldTrimAudio]);
-
     return (
         <>
             {props.children}
-
-            {!shouldTrimAudio &&
-                <TrimmerControls
-                    {...trimmerControlsCallbacks}
-                />
-            }
-
-            {shouldTrimAudio &&
-                <>
-                    <h3>Trimming your audio...</h3>
-                </>
-            }
+            <TrimmerControls
+                {...trimmerControlsCallbacks}
+            />
         </>
     )
 }

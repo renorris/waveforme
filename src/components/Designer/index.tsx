@@ -3,14 +3,19 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Container from 'react-bootstrap/esm/Container';
+import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 
 import Waveform, { WaveformOptions, WaveformCallbacks } from './Waveform';
 import AudioUploader, { AudioUploaderCallbacks } from './AudioUploader';
 import WaveformControls, { WaveformControlsCallbacks } from './WaveformControls';
 import Trimmer, { TrimmerCallbacks } from './Trimmer';
-import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
+
 
 function Designer() {
+
+    /*
+        AUDIO INITIALIZATION
+    */
 
     // Hold audio context and buffer
     const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
@@ -22,7 +27,42 @@ function Designer() {
         setAudioBuffer(new AudioBuffer({ length: 1, sampleRate: 44100 }));
     }, []);
 
-    // Options prop for waveform component
+
+
+    /*
+        AUDIO UPLOADER
+    */
+
+    // Original audio file (for an optional revert)
+    const origAudioFile = useRef<File | null>(null);
+
+    // Audio uploader callbacks
+    const audioUploaderCallbacks: AudioUploaderCallbacks = {
+
+        // Fired on audio upload & FFmpeg decoding completion
+        audioReadyCallback: async (file) => {
+
+            // Decode mp3 into AudioBuffer
+            const arrayBuffer = await file.arrayBuffer();
+            setAudioBuffer(await audioContext!.decodeAudioData(arrayBuffer));
+
+            // Store original mp3 blob for an revert feature
+            origAudioFile.current = file;
+
+            setShouldDisplayWaveform(true);
+        },
+    };
+
+
+
+    /*
+        WAVEFORM
+    */
+
+    const waveformPosition = useRef<number>(0);
+    const [shouldDisplayWaveform, setShouldDisplayWaveform] = useState<boolean>(false);
+
+    // Primary waveform options
     const [waveformOptions, setWaveformOptions] = useState<WaveformOptions>({
         playing: false,
         heightMultiplier: 0.5,
@@ -32,7 +72,7 @@ function Designer() {
         normalize: false,
     });
 
-    // Waveform callback prop
+    // Primary waveform callbacks
     const waveformCallbacks: WaveformCallbacks = {
         audioProcessWavesurferCallback: (position) => {
             waveformPosition.current = position;
@@ -46,34 +86,7 @@ function Designer() {
         },
     }
 
-    // Waveform position ref
-    const waveformPosition = useRef<number>(0);
-
-    // Callbacks for audio uploader
-    const audioUploaderCallbacks: AudioUploaderCallbacks = {
-        audioReadyCallback: async (file) => {
-            const arrayBuffer = await file.arrayBuffer();
-            setAudioBuffer(await audioContext!.decodeAudioData(arrayBuffer));
-            
-            // Set current AND original audio file since this is the first upload
-            activeAudioFile.current = file;
-            origAudioFile.current = file;
-
-            setShouldDisplayWaveform(true);
-        },
-    };
-
-    // Audio file refs
-    // Active audio file
-    const activeAudioFile = useRef<File | null>(null);
-    
-    // Original audio file (for an optional revert)
-    const origAudioFile = useRef<File | null>(null);
-
-    // Should display waveform state
-    const [shouldDisplayWaveform, setShouldDisplayWaveform] = useState<boolean>(false);
-
-    // Callbacks for waveform controls
+    // Primary waveform control callbacks
     const waveformControlsCallbacks: WaveformControlsCallbacks = {
         playButtonClickCallback: () => {
             setWaveformOptions(Object.assign({}, waveformOptions, { playing: !waveformOptions.playing }));
@@ -101,27 +114,32 @@ function Designer() {
             const arrayBuffer = await origAudioFile.current!.arrayBuffer();
             setAudioBuffer(await audioContext!.decodeAudioData(arrayBuffer));
 
-            // Set active audio file to original
-            activeAudioFile.current = origAudioFile.current;
-
             // Set position to zero
             waveformPosition.current = 0;
         },
     };
 
+
+
+    /*
+        TRIMMER
+    */
+
     // Trimmer enabled state
     const [isTrimmerEnabled, setIsTrimmerEnabled] = useState<boolean>(false);
+    const [trimmerRegions, setTrimmerRegions] = useState<RegionParams[]>([]);
+    const trimmerPlayEndRef = useRef<number>(0);
 
-    // Trimmer callbacks
+    // Primary trimmer callbacks
     const trimmerCallbacks: TrimmerCallbacks = {
-        trimCompleteCallback: async (file) => {
-            const arrayBuffer = await file.arrayBuffer();
-            setAudioBuffer(await audioContext!.decodeAudioData(arrayBuffer));
-            activeAudioFile.current = file;
+        trimCompleteCallback: async (audioBuffer) => {
+            setAudioBuffer(audioBuffer);
 
+            // Ensure some waveform options are cleaned up
             waveformPosition.current = 0;
             setWaveformOptions(Object.assign({}, waveformOptions, { playing: false }));
-            
+
+            // Update UI state
             setIsTrimmerEnabled(false);
             setShouldDisplayWaveform(true);
         },
@@ -134,12 +152,12 @@ function Designer() {
             // 1. setPlayEnd to play a short clip of the selected spot for better UX.
 
             // Only run if isSelecting = true
-            if (!isSelecting.current) {
-                return;
-            }
+            //if (!isSelecting.current) {
+            //    return;
+            //}
 
             console.log(`Running trimSelectionChangeCallback: primaryVal = ${primaryVal}, isStart = ${isStart}`);
-            
+
             // -- ENTER -- (((Logic Hell))):
 
             const bufferSecs = 1.5;
@@ -179,7 +197,7 @@ function Designer() {
             }
 
             // Set isSelecting to false
-            isSelecting.current = false;
+            //isSelecting.current = false;
 
             setWaveformOptions(Object.assign({}, waveformOptions, { playing: true }));
         },
@@ -224,25 +242,23 @@ function Designer() {
             // Set position to 0
             waveformPosition.current = 0;
 
-            // Null out playEnd
-            trimmerPlayEndRef.current = null;
+            // Set playEnd
+            trimmerPlayEndRef.current = endTime;
 
             // Set isSelecting
-            isSelecting.current = true;
+            //isSelecting.current = true;
 
             console.log(`Setting trimmerRegions to [regionParams]`);
             setTrimmerRegions([regionParams]);
         }
     }
 
-    // Trimmer-specific refs to pass into waveform
-    const [trimmerRegions, setTrimmerRegions] = useState<RegionParams[]>([]);
-    const trimmerPlayEndRef = useRef<number | null>(null);
 
-    // Fix weird state bug by only allowing selectionChangeCallback to run if selectingCallback ran immediately prior
-    const isSelecting = useRef<boolean>(false);
 
-    // DEV:
+    /*
+        DEV
+    */
+
     useEffect(() => {
         //setShouldDisplayWaveform(true);
     }, []);
@@ -260,7 +276,7 @@ function Designer() {
                     <Waveform
                         {...waveformOptions}
                         {...waveformCallbacks}
-                        position={waveformPosition.current!}
+                        position={waveformPosition}
                         audioBuffer={audioBuffer!}
                         audioContext={audioContext!}
                     />
@@ -274,16 +290,17 @@ function Designer() {
                 <Trimmer
                     {...trimmerCallbacks}
                     duration={audioBuffer!.duration}
-                    file={activeAudioFile.current!}
+                    audioContext={audioContext!}
+                    audioBuffer={audioBuffer!}
                 >
                     <Waveform
                         {...waveformOptions}
                         {...waveformCallbacks}
-                        position={waveformPosition.current!}
+                        position={waveformPosition}
                         audioBuffer={audioBuffer!}
                         audioContext={audioContext!}
                         regions={trimmerRegions}
-                        playEnd={trimmerPlayEndRef.current ? trimmerPlayEndRef.current : undefined}
+                        playEnd={trimmerPlayEndRef ? trimmerPlayEndRef : undefined}
                     />
                 </Trimmer>
             }

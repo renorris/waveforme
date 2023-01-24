@@ -23,11 +23,11 @@ interface WaveformCallbacks {
 
 function Waveform(props: WaveformOptions & WaveformCallbacks &
 {
-    position: number,
+    position: React.MutableRefObject<number>,
     audioContext: AudioContext,
     audioBuffer: AudioBuffer,
     regions?: RegionParams[],
-    playEnd?: number,
+    playEnd?: React.MutableRefObject<number>,
 }
 ) {
 
@@ -135,14 +135,14 @@ function Waveform(props: WaveformOptions & WaveformCallbacks &
             }
 
             // Set cursor position
-            newWavesurfer.seekTo((1 / newWavesurfer.getDuration()) * props.position);
+            newWavesurfer.seekTo((1 / newWavesurfer.getDuration()) * props.position.current);
 
             // Play the waveform if props deem so
             if (props.playing) newWavesurfer.play();
 
             // Set the play end if passed in props
-            if (props.playEnd !== undefined) {
-                newWavesurfer.setPlayEnd(props.playEnd);
+            if (props.playEnd?.current !== undefined) {
+                newWavesurfer.setPlayEnd(props.playEnd!.current);
                 newWavesurfer.on('pause', handleFinish);
             }
 
@@ -163,16 +163,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks &
         // Call async render
         render();
 
-    }, [
-        props.barGap,
-        props.barHeight,
-        props.barWidth,
-        props.normalize,
-        props.heightMultiplier,
-        props.playing,
-        props.audioBuffer,
-        props.regions,
-    ]);
+    });
 
     // Event handlers
     const handleAudioProcess = () => {
