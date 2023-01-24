@@ -4,16 +4,23 @@
 import React, { useEffect, useState, useRef } from 'react';
 
 import TrimmerControls, { TrimmerControlsCallbacks } from '../TrimmerControls';
+import { WaveformOptions } from '../Waveform';
 
 interface TrimmerOptions {
     file: File,
     duration: number,
+    waveformOptions: WaveformOptions,
 }
 
 interface TrimmerCallbacks {
+    // On trim complete
     trimCompleteCallback: (file: File) => void,
-    trimSelectionChangeCallback: (primaryVal: number, comparatorVal: number, isStart: boolean) => void,
-    trimSelectingCallback: (val1: number, val2: number) => void,
+
+    // Should close trimmer
+    trimCloseCallback: () => void,
+
+    // Should play/pause audio
+    trimPlayPauseCallback: () => void,
 }
 
 function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallbacks) {
@@ -23,7 +30,9 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
     const highEndRef = useRef<number>(1);
 
     const trimmerControlsCallbacks: TrimmerControlsCallbacks = {
-        trimButtonCallback: (val1, val2) => {
+        trimButtonCallback: () => {
+            let val1 = 0.3;
+            let val2 = 0.7;
             console.log(`val1 = ${val1}`);
             console.log(`val2 = ${val2}`);
             if (val1 > val2) {
@@ -39,14 +48,14 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
             setShouldTrimAudio(true);
         },
 
-        selectionChangeCallback: (primaryVal, comparatorVal, isStart) => {
+        playPauseButtonCallback: () => {
             // Forward along to parent component
-            props.trimSelectionChangeCallback(primaryVal, comparatorVal, isStart);
+            props.trimPlayPauseCallback();
         },
 
-        selectingCallback: (val1, val2) => {
+        backButtonCallback: () => {
             // Forward along to parent component
-            props.trimSelectingCallback(val1, val2);
+            props.trimCloseCallback();
         },
     }
 
@@ -80,9 +89,10 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
                 arguments: [
                     "-y",
                     "-ss",
-                    (lowEndRef.current * props.duration).toFixed(4).toString(),
+                    (lowEndRef.current * props.duration).toFixed(6).toString(),
                     "-to",
-                    (highEndRef.current * props.duration).toFixed(4).toString(),
+                    (highEndRef.current * props.duration).toFixed(6).toString(),
+                    "-accurate_seek",
                     "-i",
                     props.file.name,
                     "-threads",
@@ -113,6 +123,7 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
             {!shouldTrimAudio &&
                 <TrimmerControls
                     {...trimmerControlsCallbacks}
+                    waveformOptions={props.waveformOptions}
                 />
             }
 

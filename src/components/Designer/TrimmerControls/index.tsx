@@ -2,94 +2,75 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import React, { useEffect, useState, useRef } from 'react';
-import FormRange from 'react-bootstrap/esm/FormRange'
 import Button from 'react-bootstrap/esm/Button';
 import Container from 'react-bootstrap/esm/Container';
-import { InfoCircle } from 'react-bootstrap-icons';
+import { InfoCircle, Check2Square, PlayFill, PauseFill, ArrowReturnLeft } from 'react-bootstrap-icons';
 
-interface TrimmerControlsCallbacks {
-    trimButtonCallback: (val1: number, val2: number) => void,
-    
-    // On selection. Once the mouse has been released. For playing audio preview snippet.
-    selectionChangeCallback: (primaryVal: number, comparatorVal: number, isStart: boolean) => void,
+import { Row, Col } from 'react-bootstrap';
+import { WaveformOptions } from '../Waveform';
 
-    // On any change. For updating the region visualizer during selection.
-    selectingCallback: (val1: number, val2: number) => void,
+interface TrimmerControlsProps {
+    waveformOptions: WaveformOptions,
 }
 
-function TrimmerControls(props: TrimmerControlsCallbacks) {
+interface TrimmerControlsCallbacks {
+    trimButtonCallback: () => void,
 
-    const range1 = useRef<HTMLInputElement>(null);
-    const range2 = useRef<HTMLInputElement>(null);
+    // On play/pause button click
+    playPauseButtonCallback: () => void,
 
-    // Signal initial region to be drawn
-    useEffect(() => {
-        console.log('Signaling initial region draw');
-        props.selectingCallback(parseFloat(range1.current!.value), parseFloat(range2.current!.value));
-    }, []);
+    // On back button click
+    backButtonCallback: () => void,
+}
 
-    const handleSelectionChange = (originIsRangeOne: boolean) => {
-        let isStart = false;
-        let primaryVal = range1.current!.value;
-        let comparatorVal = range2.current!.value;
-        if (originIsRangeOne) {
-            if (range1.current!.value < range2.current!.value) {
-                isStart = true;
-            }
-        }
-        else {
-            if (range1.current!.value > range2.current!.value) {
-                isStart = true;
-            }
-            primaryVal = range2.current!.value;
-            comparatorVal = range1.current!.value;
-        }
-        props.selectionChangeCallback(parseFloat(primaryVal), parseFloat(comparatorVal), isStart);
-    }
-
-    const handleSelecting = () => {
-        props.selectingCallback(parseFloat(range1.current!.value), parseFloat(range2.current!.value));
-    }
+function TrimmerControls(props: TrimmerControlsCallbacks & TrimmerControlsProps) {
 
     return (
-        <Container
-            fluid
-            className='d-flex flex-column justify-content-center align-items-center gap-2 p-0'
-        >
-            <h3>Select a portion to trim</h3>
-            <FormRange
-                id='range-1'
-                ref={range1}
-                min='0'
-                max='1'
-                defaultValue='0.3'
-                step='0.001'
-                onInput={handleSelecting}
-                onTouchEnd={() => handleSelectionChange(true)}
-                onMouseUp={() => handleSelectionChange(true)}
-            />
-            <FormRange
-                id='range-2'
-                ref={range2}
-                min='0'
-                max='1'
-                defaultValue='0.7'
-                step='0.001'
-                onInput={handleSelecting}
-                onTouchEnd={() => handleSelectionChange(false)}
-                onMouseUp={() => handleSelectionChange(false)}
-            />
-            <Container className='fw-light d-flex flex-row justify-content-start align-items-center p-0 gap-2'>
-                <InfoCircle size={15} />
-                You can trim your audio again later.
-            </Container>
-            <Button
-                variant='primary'
-                size='lg'
-                onClick={event => props.trimButtonCallback(parseFloat(range1.current!.value), parseFloat(range2.current!.value))}
-            >
-                Trim
-            </Button>
+        <Container fluid>
+            <Row className='justify-content-center align-items-center text-center mt-3'>
+                <h5 className='m-0'>Drag the highlighted selection to trim</h5>
+            </Row>
+
+            <Row className='justify-content-center align-items-center mt-3'>
+                <Col xs='4' sm='2' className='justify-content-start align-items-center pe-2 p-0'>
+                    <Button
+                        variant='danger'
+                        onClick={() => props.backButtonCallback()}
+                        style={{ width: '100%' }}
+                    >
+                        <ArrowReturnLeft size={25} />
+                    </Button>
+                </Col>
+
+                <Col xs='4' sm='2' className='justify-content-center align-items-center p-0'>
+                    <Button
+                        variant={props.waveformOptions.playing ? 'danger' : 'outline-success'}
+                        onClick={() => props.playPauseButtonCallback()}
+                        style={{ width: '100%' }}
+                    >
+                        {props.waveformOptions.playing ? <PauseFill size={25} /> : <PlayFill size={25} />}
+                    </Button>
+                </Col>
+
+                <Col xs='4' sm='2' className='justify-content-center align-items-center ps-2 p-0'>
+                    <Button
+                        variant='success'
+                        style={{ width: '100%' }}
+                        onClick={() => props.trimButtonCallback}
+                    >
+                        <Check2Square size={25} />
+                    </Button>
+                </Col>
+            </Row>
+
+            <Row className='justify-content-start align-items-center mt-3'>
+                <Col xs='auto' className='d-flex align-items-center p-0'>
+                    <InfoCircle size={15} />
+                </Col>
+                <Col xs='auto' className='fw-light ps-2'>
+                    You can always trim again.
+                </Col>
+            </Row>
         </Container>
     )
 }

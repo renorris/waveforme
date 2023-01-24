@@ -2,7 +2,7 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Col, Container, Row } from 'react-bootstrap';
+import { Col, Row } from 'react-bootstrap';
 import { InfoCircle } from 'react-bootstrap-icons';
 
 interface AudioUploaderCallbacks {
@@ -31,6 +31,7 @@ function AudioUploader(props: AudioUploaderCallbacks) {
     // Touch the wavesurfer dynamic import so it loads in the background
     const touchWavesurfer = async () => {
         import('wavesurfer.js');
+        import('wavesurfer.js/src/plugin/regions');
     }
 
     // FFmpeg decode on file change, call audioReadyCallback for parent
@@ -88,7 +89,7 @@ function AudioUploader(props: AudioUploaderCallbacks) {
                         style={{ maxWidth: '384px' }}
                         type='file'
                         accept='audio/*,video/*'
-                        onClick={event => { touchFfmpeg(); touchWavesurfer(); }}
+                        onClick={() => { touchFfmpeg(); touchWavesurfer(); }}
                         onChange={(event) => handleFileUpload(event)}
                     />
                 </>
