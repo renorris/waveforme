@@ -10,6 +10,7 @@ import AudioUploader, { AudioUploaderCallbacks } from './AudioUploader';
 import WaveformControls, { WaveformControlsCallbacks } from './WaveformControls';
 import Trimmer, { TrimmerCallbacks } from './Trimmer';
 import TrimmerControls, { TrimmerControlsCallbacks } from './TrimmerControls';
+import { Clamp } from './util';
 
 
 function Designer() {
@@ -73,7 +74,7 @@ function Designer() {
         normalize: false,
     });
 
-    // Primary waveform callbacks
+    // Primary wavesurfer callbacks
     const waveformCallbacks: WaveformCallbacks = {
         audioProcessWavesurferCallback: (position) => {
             waveformPosition.current = position;
@@ -82,6 +83,16 @@ function Designer() {
             waveformPosition.current = 0;
             setSeek(0);
             setWaveformOptions(prev => ({ ...prev, playing: false }));
+        },
+        pauseWavesurferCallback: (position) => {
+            console.log('wavesurfer pause fired');
+
+            // Only pause state if position is at trimmer end
+            console.log(`position = ${position}, trimmerPlayEnd = ${trimmerPlayEnd.current}`);
+
+            if (trimmerPlayEnd.current && Math.abs(position - trimmerPlayEnd.current) <= 0.01) {
+                setWaveformOptions(prev => ({ ...prev, playing: false }));
+            }
         },
         seekWavesurferCallback: (position) => {
             waveformPosition.current = position;
@@ -193,6 +204,11 @@ function Designer() {
         if (!isTrimmerEnabled) {
             console.log('Cleaning up trimmer regions');
             setTrimmerRegions([]);
+
+            setSeek(0);
+            waveformPosition.current = 0;
+            setWaveformOptions(prev => ({ ...prev, playing: false }));
+
             return;
         };
 
@@ -232,16 +248,41 @@ function Designer() {
             trimmerBeginSec.current = newRegion.start!;
             trimmerEndSec.current = newRegion.end!;
 
-            // Also disable playEnd since we're done with that.
-            //trimmerPlayEnd.current = undefined;
+            trimmerPlayEnd.current = undefined;
+            setWaveformOptions(prev => ({ ...prev, playing: false }));
 
             setTrimmerRegions([newRegion]);
         },
         
         onDragFinish: (position) => {
             console.log('Trimmer waveform onDragFinish');
-            //const positionSec = position * audioBuffer!.duration;
-            //const isStartCloser = (Math.abs(trimmerBeginSec.current - positionSec) < Math.abs(trimmerEndSec.current - positionSec));
+            const positionSec = position * audioBuffer!.duration;
+            const isStartCloser = (Math.abs(trimmerBeginSec.current - positionSec) < Math.abs(trimmerEndSec.current - positionSec));
+
+            const previewPlaybackDuration = 1.5;
+
+            if (isStartCloser) {
+                setSeek(position);
+                trimmerBeginSec.current = position * audioBuffer!.duration;
+                (trimmerEndSec.current - positionSec) > previewPlaybackDuration ? 
+                    trimmerPlayEnd.current = (positionSec + 1.5) : 
+                    trimmerPlayEnd.current = trimmerEndSec.current;
+            }
+            else {
+                trimmerPlayEnd.current = positionSec;
+                if ((positionSec - trimmerBeginSec.current) > 1.5) {
+                    const pos = Clamp(((positionSec - 1.5) / audioBuffer!.duration), 0, 1);
+                    setSeek(pos);
+                    waveformPosition.current = pos * audioBuffer!.duration;
+                }
+                else {
+                    const pos = Clamp(trimmerBeginSec.current / audioBuffer!.duration, 0, 1);
+                    setSeek(pos);
+                    waveformPosition.current = pos * audioBuffer!.duration;
+                }
+            }
+
+            setWaveformOptions(prev => ({ ...prev, playing: true }));
         },
     }
 
@@ -255,6 +296,26 @@ function Designer() {
         trimButtonCallback: () => {
             setShouldTrim(true);
         },
+        playButtonCallback: () => {
+            if (waveformOptions.playing) {
+                setWaveformOptions(prev => ({ ...prev, playing: false }));
+                trimmerPlayEnd.current = trimmerEndSec.current;
+                const pos = Clamp(trimmerBeginSec.current / audioBuffer!.duration, 0, 1);
+                setSeek(pos);
+                waveformPosition.current = pos * audioBuffer!.duration;
+            }
+            else {
+                const pos = Clamp(trimmerBeginSec.current / audioBuffer!.duration, 0, 1);
+                setSeek(pos);
+                waveformPosition.current = pos * audioBuffer!.duration;
+                trimmerPlayEnd.current = trimmerEndSec.current;
+                setWaveformOptions(prev => ({ ...prev, playing: true }));
+            }
+        },
+        backButtonCallback: () => {
+            setIsTrimmerEnabled(false);
+            setShouldDisplayWaveform(true);
+        }
     }
 
 
@@ -265,6 +326,7 @@ function Designer() {
 
     useEffect(() => {
         //setShouldDisplayWaveform(true);
+        //setIsTrimmerEnabled(true);
     }, []);
 
     return (
@@ -308,12 +370,15 @@ function Designer() {
                         {...waveformCallbacks}
                         {...trimmerWaveformInteractionCallbacks}
                         position={waveformPosition}
+                        seek={seek}
                         audioBuffer={audioBuffer!}
                         audioContext={audioContext!}
                         regions={trimmerRegions}
+                        playEnd={trimmerPlayEnd}
                     />
                     <TrimmerControls
                         {...trimmerControlsCallbacks}
+                        waveformOptions={waveformOptions}
                     />
                 </>
             }

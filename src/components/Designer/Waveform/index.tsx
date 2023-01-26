@@ -6,6 +6,8 @@ import { Container } from 'react-bootstrap';
 import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
 
+import { Clamp } from '../util';
+
 interface WaveformOptions {
     playing: boolean,
     heightMultiplier: number,
@@ -18,6 +20,7 @@ interface WaveformOptions {
 interface WaveformCallbacks {
     audioProcessWavesurferCallback: (position: number) => void,
     finishWavesurferCallback: () => void,
+    pauseWavesurferCallback: (progress: number) => void,
     seekWavesurferCallback: (progress: number) => void,
 }
 
@@ -33,7 +36,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
     audioContext: AudioContext,
     audioBuffer: AudioBuffer,
     regions?: RegionParams[],
-    playEnd?: number,
+    playEnd?: React.MutableRefObject<number | undefined>,
 }
 ) {
 
@@ -49,14 +52,6 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
 
     const isDragging = useRef<boolean>(false);
 
-    // Helpers
-    const clamp = (num: number, min: number, max: number) => {
-        return num <= min
-            ? min
-            : num >= max
-                ? max
-                : num
-    }
     const onMouseMove = (event: MouseEvent) => {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -64,7 +59,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         if (!isDragging.current) return;
         const position = (event.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
         console.log(`Mouse dragged at x position ${position}`);
-        props.onDrag(clamp(position, 0, 1));
+        props.onDrag(Clamp(position, 0, 1));
     }
     const onMouseDown = (event: MouseEvent) => {
         event.preventDefault();
@@ -73,7 +68,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         isDragging.current = true;
         const position = (event.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
         console.log('Mouse is now dragging!')
-        props.onDrag(clamp(position, 0, 1));
+        props.onDrag(Clamp(position, 0, 1));
     }
     const onMouseUp = (event: MouseEvent) => {
         event.preventDefault();
@@ -82,7 +77,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         isDragging.current = false;
         const position = (event.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
         console.log('Mouse is no longer dragging.');
-        props.onDragFinish(clamp(position, 0, 1));
+        props.onDragFinish(Clamp(position, 0, 1));
     }
 
     const onTouchStart = (event: TouchEvent) => {
@@ -92,7 +87,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         event.target!.addEventListener('touchend', event => onTouchEnd(event as TouchEvent));
         console.log('Running onTouchStart');
         const position = (event.changedTouches.item(0)!.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
-        props.onDrag(clamp(position, 0, 1));
+        props.onDrag(Clamp(position, 0, 1));
     }
     const onTouchMove = (event: TouchEvent) => {
         event.preventDefault();
@@ -100,7 +95,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         console.log('Running onTouchMove');
         console.log(`bubbles = ${event.bubbles}`);
         const position = (event.changedTouches.item(0)!.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
-        props.onDrag(clamp(position, 0, 1));
+        props.onDrag(Clamp(position, 0, 1));
     }
     const onTouchEnd = (event: TouchEvent) => {
         event.preventDefault();
@@ -109,7 +104,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         event.target!.removeEventListener('touchend', event => onTouchEnd(event as TouchEvent));
         console.log('Running onTouchEnd');
         const position = (event.changedTouches.item(0)!.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
-        props.onDragFinish(clamp(position, 0, 1));
+        props.onDragFinish(Clamp(position, 0, 1));
     }
 
     // Register helpers
@@ -200,6 +195,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
                 // Assign event handlers
                 wavesurfer.current!.on('audioprocess', handleAudioProcess);
                 wavesurfer.current!.on('finish', handleFinish);
+                wavesurfer.current!.on('pause', handlePause);
                 wavesurfer.current!.on('seek', handleSeek);
             }
 
@@ -235,8 +231,8 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
             props.playing ? wavesurfer.current!.play() : wavesurfer.current!.pause();
 
             // Set the play end if passed in props
-            (props.playEnd !== undefined) ?
-                wavesurfer.current!.setPlayEnd(props.playEnd!) :
+            (props.playEnd?.current !== undefined) ?
+                wavesurfer.current!.setPlayEnd(props.playEnd.current) :
                 wavesurfer.current!.setPlayEnd(wavesurfer.current!.getDuration());
         }
 
@@ -268,14 +264,17 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
     }, [props.playing]);
 
     useEffect(() => {
-        (props.playEnd !== undefined) ?
-            wavesurfer.current?.setPlayEnd(props.playEnd!) :
-            wavesurfer.current?.setPlayEnd(wavesurfer.current!.getDuration());
-    }, [props.playEnd]);
-
-    useEffect(() => {
         if (props.seek !== undefined) wavesurfer.current?.seekTo(props.seek);
     }, [props.seek]);
+
+    useEffect(() => {
+        if (props.playEnd?.current !== undefined) {
+            wavesurfer.current?.setPlayEnd(props.playEnd.current);
+        }
+        else {
+            wavesurfer.current?.setPlayEnd(wavesurfer.current!.getDuration());
+        }
+    }, [props.playEnd?.current]);
 
     useEffect(() => {
         console.log('Regions changed in Waveform: ' + JSON.stringify(props.regions));
@@ -303,6 +302,9 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
     }
     const handleFinish = () => {
         props.finishWavesurferCallback();
+    }
+    const handlePause = () => {
+        props.pauseWavesurferCallback(wavesurfer.current!.getCurrentTime());
     }
     const handleSeek = () => {
         props.seekWavesurferCallback(wavesurfer.current!.getCurrentTime());
