@@ -5,6 +5,7 @@ const path = require('path');
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { StatsWriterPlugin } = require("webpack-stats-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = (env) => {
 
@@ -24,6 +25,15 @@ module.exports = (env) => {
 
         optimization: {
             minimize: false,
+            // minimizer: [
+            //     new TerserPlugin({
+            //         terserOptions: {
+            //             compress: {
+            //                 drop_console: true
+            //             },
+            //         },
+            //     }),
+            // ],
             runtimeChunk: 'single',
             splitChunks: {
                 chunks: 'async',
@@ -33,6 +43,7 @@ module.exports = (env) => {
         },
 
         devServer: {
+            host: '0.0.0.0',
             hot: true,
             headers: {
                 "Access-Control-Allow-Origin": "*",

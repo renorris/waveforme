@@ -34,19 +34,19 @@ function WaveformControls(props: WaveformControlsCallbacks & { waveformOptions: 
     return (
         <Container fluid className='justify-content-center align-items-center'>
             <Row className='justify-content-center mt-1'>
-                <Col xs='4' md='auto' className='d-flex justify-content-center ps-0 pe-1'>
+                <Col xs='4' sm='3' className='d-flex justify-content-center ps-0 pe-1'>
                     <Button style={{ width: '100%' }} onClick={() => setShowRevertModal(true)} variant='warning'>
                         <ArrowCounterclockwise size={25} />
                     </Button>
                 </Col>
 
-                <Col xs='4' md='auto' className='d-flex justify-content-center px-1'>
+                <Col xs='4' sm='3' className='d-flex justify-content-center px-1'>
                     <Button style={{ width: '100%' }} onClick={props.trimCallback} variant='primary'>
                         <Scissors size={25} style={{ transform: 'rotate(90deg)' }} />
                     </Button>
                 </Col>
 
-                <Col xs='4' md='auto' className='d-flex justify-content-center pe-0 ps-1'>
+                <Col xs='4' sm='3' className='d-flex justify-content-center pe-0 ps-1'>
                     <Button style={{ width: '100%' }} onClick={props.playButtonClickCallback} variant={props.waveformOptions.playing ? 'danger' : 'success'}>
                         {props.waveformOptions.playing ? <Pause size={25} /> : <PlayFill size={25} />}
                     </Button>
@@ -54,7 +54,7 @@ function WaveformControls(props: WaveformControlsCallbacks & { waveformOptions: 
             </Row>
 
             <Row className='mt-4'>
-                <Col className='gap-1 p-0'>
+                <Col xs='4' className='gap-1 p-0'>
                     <Button
                         variant={props.waveformOptions.normalize ? 'primary' : 'outline-danger'}
                         onClick={props.normalizeButtonClickCallback}
@@ -63,7 +63,7 @@ function WaveformControls(props: WaveformControlsCallbacks & { waveformOptions: 
                     </Button>
                 </Col>
 
-                <Col className='gap-1 p-0'>
+                <Col xs='8' className='gap-1 p-0'>
                     <div className={props.waveformOptions.normalize ? 'fw-lighter' : ''}>
                         {props.waveformOptions.normalize ? 'Normalized' : 'Intensity'}
                     </div>

@@ -9,15 +9,17 @@ interface TrimmerOptions {
     audioContext: AudioContext,
     audioBuffer: AudioBuffer,
     duration: number,
+
+    shouldTrim: boolean,
+    beginSec: React.MutableRefObject<number>,
+    endSec: React.MutableRefObject<number>,
 }
 
 interface TrimmerCallbacks {
     trimCompleteCallback: (audioBuffer: AudioBuffer) => void,
-    trimSelectionChangeCallback: (primaryVal: number, comparatorVal: number, isStart: boolean) => void,
-    trimSelectingCallback: (val1: number, val2: number) => void,
 }
 
-function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallbacks) {
+function Trimmer(props: TrimmerOptions & TrimmerCallbacks) {
 
     /*
         AUDIO BUFFER SLICER
@@ -61,54 +63,17 @@ function Trimmer(props: React.PropsWithChildren & TrimmerOptions & TrimmerCallba
 
 
     /*
-        TRIMMER CONTROLS
+        DETECT A NEED TO TRIM
     */
 
-    const trimmerControlsCallbacks: TrimmerControlsCallbacks = {
-        trimButtonCallback: (val1, val2) => {
-            console.log(`val1 = ${val1}`);
-            console.log(`val2 = ${val2}`);
+    useEffect(() => {
+        if (props.shouldTrim) props.trimCompleteCallback(sliceAudioBuffer(props.audioBuffer, props.beginSec.current!, props.endSec.current!));
+    }, [props.shouldTrim]);
 
-            let startPos = 0;
-            let endPos = 1;
+    
 
-            if (val1 >= val2) {
-                endPos = val1;
-                startPos = val2;
-            }
-            else {
-                startPos = val1;
-                endPos = val2;
-            }
-
-            const startTime = startPos * props.audioBuffer.duration;
-            const endTime = endPos * props.audioBuffer.duration;
-
-            console.log(`startTime = ${startTime}`);
-            console.log(`endTime = ${endTime}`);
-
-            props.trimCompleteCallback(sliceAudioBuffer(props.audioBuffer, startTime, endTime));
-        },
-
-        selectionChangeCallback: (primaryVal, comparatorVal, isStart) => {
-            // Forward along to parent component
-            props.trimSelectionChangeCallback(primaryVal, comparatorVal, isStart);
-        },
-
-        selectingCallback: (val1, val2) => {
-            // Forward along to parent component
-            props.trimSelectingCallback(val1, val2);
-        },
-    }
-
-    return (
-        <>
-            {props.children}
-            <TrimmerControls
-                {...trimmerControlsCallbacks}
-            />
-        </>
-    )
+    // Return nothing. The trimmer component has no UI. It only performs trim logic based on props.
+    return (<></>);
 }
 
 export { TrimmerCallbacks };
