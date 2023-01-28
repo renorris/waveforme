@@ -7,19 +7,20 @@ import Container from 'react-bootstrap/esm/Container';
 import { ArrowReturnLeft, Check2Square, InfoCircle, Pause, PlayFill, Scissors, StopFill } from 'react-bootstrap-icons';
 import { Col, Row } from 'react-bootstrap';
 
-import { WaveformOptions } from '../Waveform';
+import { useAppSelector, useAppDispatch } from '../../../state/hooks';
+import { signalTrimmerStart, pause, play, switchActiveTool, DesignerTool } from '../designerSlice';
 
-interface TrimmerControlsCallbacks {
-    trimButtonCallback: () => void,
-    playButtonCallback: () => void,
-    backButtonCallback: () => void,
-}
+function TrimmerControls() {
 
-interface TrimmerControlsProps {
-    waveformOptions: WaveformOptions,
-}
+    const dispatch = useAppDispatch();
+    const playing = useAppSelector(state => state.designer.playing);
+    const trimmerEndPos = useAppSelector(state => state.designer.trimmerEndPos);
+    const trimmerStartPos = useAppSelector(state => state.designer.trimmerStartPos);
 
-function TrimmerControls(props: TrimmerControlsCallbacks & TrimmerControlsProps) {
+    const handlePlayPause = () => {
+        playing ? dispatch(pause()) : dispatch(play());
+    }
+
     return (
         <Container
             className='mt-2'
@@ -33,19 +34,19 @@ function TrimmerControls(props: TrimmerControlsCallbacks & TrimmerControlsProps)
                     <Button
                         style={{ width: '100%' }}
                         variant='danger'
-                        onClick={() => props.backButtonCallback()}
+                        onClick={() => dispatch(switchActiveTool(DesignerTool.MAIN))}
                     >
-                    <ArrowReturnLeft size={25} />
+                        <ArrowReturnLeft size={25} />
                     </Button>
                 </Col>
 
                 <Col xs='4' className='d-flex justify-content-center align-items-center px-1'>
                     <Button
                         style={{ width: '100%' }}
-                        variant={props.waveformOptions.playing ? 'danger' : 'outline-success'}
-                        onClick={() => props.playButtonCallback()}
+                        variant={playing ? 'danger' : 'outline-success'}
+                        onClick={() => handlePlayPause()}
                     >
-                    {props.waveformOptions.playing ? <StopFill size={25} /> : <PlayFill size={25} />}
+                        {playing ? <StopFill size={25} /> : <PlayFill size={25} />}
                     </Button>
                 </Col>
 
@@ -53,9 +54,9 @@ function TrimmerControls(props: TrimmerControlsCallbacks & TrimmerControlsProps)
                     <Button
                         style={{ width: '100%' }}
                         variant='success'
-                        onClick={() => props.trimButtonCallback()}
+                        onClick={() => dispatch(signalTrimmerStart())}
                     >
-                    <Check2Square size={25} />
+                        <Check2Square size={25} />
                     </Button>
                 </Col>
             </Row>
@@ -72,5 +73,4 @@ function TrimmerControls(props: TrimmerControlsCallbacks & TrimmerControlsProps)
     )
 }
 
-export { TrimmerControlsCallbacks };
 export default TrimmerControls;

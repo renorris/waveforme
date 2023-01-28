@@ -1,4 +1,4 @@
-// Waveforme types.tsx
+// Waveforme types.ts
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 // Provide misc types

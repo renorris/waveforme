@@ -24,16 +24,16 @@ module.exports = (env) => {
         target: 'web',
 
         optimization: {
-            minimize: false,
-            // minimizer: [
-            //     new TerserPlugin({
-            //         terserOptions: {
-            //             compress: {
-            //                 drop_console: true
-            //             },
-            //         },
-            //     }),
-            // ],
+            minimize: isLocal ? false : true,
+            minimizer: [
+                new TerserPlugin({
+                    terserOptions: {
+                        compress: {
+                            drop_console: true
+                        },
+                    },
+                }),
+            ],
             runtimeChunk: 'single',
             splitChunks: {
                 chunks: 'async',
@@ -43,7 +43,7 @@ module.exports = (env) => {
         },
 
         devServer: {
-            host: '0.0.0.0',
+            host: 'localhost',
             hot: true,
             headers: {
                 "Access-Control-Allow-Origin": "*",

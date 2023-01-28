@@ -6,43 +6,35 @@ import { Container } from 'react-bootstrap';
 import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
 
-import { Clamp } from '../util';
+import { Clamp, generateTrimmerRegion } from '../util';
+import { useAppSelector, useAppDispatch } from '../../../state/hooks';
+import { seekTo, pause, play, setDragPos, DesignerTool, setTrimmerStartPos, setTrimmerEndPos, playUntil } from '../designerSlice';
 
-interface WaveformOptions {
-    playing: boolean,
-    heightMultiplier: number,
-    barGap: number,
-    barWidth: number,
-    barHeight: number,
-    normalize: boolean,
-}
-
-interface WaveformCallbacks {
-    audioProcessWavesurferCallback: (position: number) => void,
-    finishWavesurferCallback: () => void,
-    pauseWavesurferCallback: (progress: number) => void,
-    seekWavesurferCallback: (progress: number) => void,
-}
-
-interface WaveformInteractionCallbacks {
-    onDrag: (position: number) => void,
-    onDragFinish: (position: number) => void,
-}
-
-function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteractionCallbacks &
-{
-    position: React.MutableRefObject<number>,
-    seek?: number,
-    audioContext: AudioContext,
-    audioBuffer: AudioBuffer,
-    regions?: RegionParams[],
-    playEnd?: React.MutableRefObject<number | undefined>,
-}
-) {
+function Waveform() {
 
     const wavesurfer = useRef<WaveSurfer>();
     const waveformContainer = useRef<HTMLDivElement>(null);
     const waveformParentContainer = useRef<HTMLDivElement>(null);
+    const wavesurferPosition = useRef<number>(0);
+
+    const dispatch = useAppDispatch();
+    // Use selectors here to listen for state
+    const heightMultiplier = useAppSelector(state => state.designer.heightMultiplier);
+    const barHeight = useAppSelector(state => state.designer.barHeight);
+    const barWidth = useAppSelector(state => state.designer.barWidth);
+    const barGap = useAppSelector(state => state.designer.barGap);
+    const normalize = useAppSelector(state => state.designer.normalize);
+    const playing = useAppSelector(state => state.designer.playing);
+    const seek = useAppSelector(state => state.designer.seek);
+    const audioBufferChannelData = useAppSelector(state => state.designer.audioBufferChannelData);
+    const audioBufferFrameCount = useAppSelector(state => state.designer.audioBufferFrameCount);
+    const trimmerEndPos = useAppSelector(state => state.designer.trimmerEndPos);
+    const trimmerStartPos = useAppSelector(state => state.designer.trimmerStartPos);
+    const playEnd = useAppSelector(state => state.designer.playEnd);
+    const regions = useAppSelector(state => state.designer.regions);
+    const dragPos = useAppSelector(state => state.designer.dragPos);
+    const dragFinishSignal = useAppSelector(state => state.designer.dragFinishSignal);
+    const activeTool = useAppSelector(state => state.designer.activeTool);
 
 
 
@@ -59,7 +51,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         if (!isDragging.current) return;
         const position = (event.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
         console.log(`Mouse dragged at x position ${position}`);
-        props.onDrag(Clamp(position, 0, 1));
+        dispatch(setDragPos(Clamp(position, 0, 1)));
     }
     const onMouseDown = (event: MouseEvent) => {
         event.preventDefault();
@@ -68,7 +60,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         isDragging.current = true;
         const position = (event.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
         console.log('Mouse is now dragging!')
-        props.onDrag(Clamp(position, 0, 1));
+        dispatch(setDragPos(Clamp(position, 0, 1)));
     }
     const onMouseUp = (event: MouseEvent) => {
         event.preventDefault();
@@ -77,7 +69,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         isDragging.current = false;
         const position = (event.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
         console.log('Mouse is no longer dragging.');
-        props.onDragFinish(Clamp(position, 0, 1));
+        dispatch(setDragPos(Clamp(position, 0, 1)));
     }
 
     const onTouchStart = (event: TouchEvent) => {
@@ -87,7 +79,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         event.target!.addEventListener('touchend', event => onTouchEnd(event as TouchEvent));
         console.log('Running onTouchStart');
         const position = (event.changedTouches.item(0)!.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
-        props.onDrag(Clamp(position, 0, 1));
+        dispatch(setDragPos(Clamp(position, 0, 1)));
     }
     const onTouchMove = (event: TouchEvent) => {
         event.preventDefault();
@@ -95,7 +87,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         console.log('Running onTouchMove');
         console.log(`bubbles = ${event.bubbles}`);
         const position = (event.changedTouches.item(0)!.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
-        props.onDrag(Clamp(position, 0, 1));
+        dispatch(setDragPos(Clamp(position, 0, 1)));
     }
     const onTouchEnd = (event: TouchEvent) => {
         event.preventDefault();
@@ -104,7 +96,7 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         event.target!.removeEventListener('touchend', event => onTouchEnd(event as TouchEvent));
         console.log('Running onTouchEnd');
         const position = (event.changedTouches.item(0)!.clientX - waveformParentContainer.current!.offsetLeft) / waveformParentContainer.current!.clientWidth;
-        props.onDragFinish(Clamp(position, 0, 1));
+        dispatch(setDragPos(Clamp(position, 0, 1)));
     }
 
     // Register helpers
@@ -134,22 +126,22 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
 
     // Helper function to generate params based off of waveformOptions and default values
     const paramMaker = () => ({
-        barHeight: props.barHeight,
-        barWidth: props.barWidth,
-        barGap: props.barGap,
-        normalize: props.normalize,
-        cursorWidth: props.playing ? 1 : 0,
+        barHeight: barHeight,
+        barWidth: barWidth,
+        barGap: barGap,
+        normalize: normalize,
+        cursorWidth: playing ? 1 : 0,
         container: waveformContainer.current!,
         removeMediaElementOnDestroy: false,
         backend: 'WebAudio',
-        audioContext: props.audioContext,
+        //audioContext: props.audioContext,
         responsive: false,
         interact: false,
         hideScrollbar: true,
         progressColor: '#0D5BFF',
         waveColor: '#000000',
         barMinHeight: 3,
-        height: (waveformParentContainer.current?.offsetWidth as number * props.heightMultiplier),
+        height: (waveformParentContainer.current?.offsetWidth as number * heightMultiplier),
     });
 
 
@@ -173,7 +165,6 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
         // Async render function to be called later
         const render = async () => {
             console.log('Rendering waveform');
-            console.log(props);
 
             // Async load wavesurfer
             const WaveSurfer = (await import('wavesurfer.js')).default;
@@ -208,39 +199,43 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
             wavesurfer.current!.createDrawer();
 
             // Load audio
-            wavesurfer.current.loadDecodedBuffer(props.audioBuffer);
+            // Might be slow: TODO - only create new buffer when necessary
+            const audioCtx = wavesurfer.current!.backend.getAudioContext();
+            const audioBuffer = audioCtx.createBuffer(1, audioBufferFrameCount, 44100);
+            audioBuffer.copyToChannel(audioBufferChannelData, 0);
+            wavesurfer.current.loadDecodedBuffer(audioBuffer);
 
             // Add regions if regions were passed in props
-            if (props.regions !== undefined && props.regions!.length > 0) {
+            if (regions.length > 0) {
 
                 console.log('Removing old regions');
                 wavesurfer.current!.regions.clear();
 
                 console.log('Building regions');
 
-                props.regions.forEach(region => {
+                regions.forEach(region => {
                     // Copy the object just in case
-                    wavesurfer.current!.addRegion({...region});
+                    wavesurfer.current!.addRegion({ ...region });
                 });
             }
 
-            // Set cursor position
-            wavesurfer.current!.seekTo((1 / wavesurfer.current!.getDuration()) * props.position.current);
+            // Sync cursor position
+            wavesurfer.current!.seekTo((1 / wavesurfer.current!.getDuration()) * wavesurferPosition.current);
 
             // Play the waveform if props deem so
-            props.playing ? wavesurfer.current!.play() : wavesurfer.current!.pause();
+            playing ? wavesurfer.current!.play() : wavesurfer.current!.pause();
 
             // Set the play end if passed in props
-            (props.playEnd?.current !== undefined) ?
-                wavesurfer.current!.setPlayEnd(props.playEnd.current) :
+            (playEnd !== null) ?
+                wavesurfer.current!.setPlayEnd(playEnd) :
                 wavesurfer.current!.setPlayEnd(wavesurfer.current!.getDuration());
         }
 
         // Call async render
         render();
     }, [
-        props.playing, props.heightMultiplier, props.barGap, props.barWidth,
-        props.barHeight, props.normalize, props.audioBuffer, props.audioContext,
+        playing, heightMultiplier, barGap, barWidth,
+        barHeight, normalize, audioBufferChannelData
     ]);
 
     // Cleanup when unmounted
@@ -260,36 +255,98 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
     */
 
     useEffect(() => {
-        props.playing ? wavesurfer.current?.play() : wavesurfer.current?.pause();
-    }, [props.playing]);
+        playing ? wavesurfer.current?.play() : wavesurfer.current?.pause();
+    }, [playing]);
 
     useEffect(() => {
-        if (props.seek !== undefined) wavesurfer.current?.seekTo(props.seek);
-    }, [props.seek]);
+        wavesurfer.current?.seekTo(seek);
+    }, [seek]);
 
     useEffect(() => {
-        if (props.playEnd?.current !== undefined) {
-            wavesurfer.current?.setPlayEnd(props.playEnd.current);
+        if (playEnd !== null) {
+            wavesurfer.current?.setPlayEnd(playEnd);
         }
         else {
             wavesurfer.current?.setPlayEnd(wavesurfer.current!.getDuration());
         }
-    }, [props.playEnd?.current]);
+    }, [playEnd]);
 
     useEffect(() => {
-        console.log('Regions changed in Waveform: ' + JSON.stringify(props.regions));
+        console.log('Regions changed in Waveform: ' + JSON.stringify(regions));
         wavesurfer.current?.regions.clear();
 
-        if (props.regions === undefined || props.regions.length === 0) {
+        if (regions.length === 0) {
             return;
         }
 
-        props.regions.forEach(region => {
+        regions.forEach(region => {
             // Clone the object just in case
-            wavesurfer.current?.addRegion({...region});
+            wavesurfer.current?.addRegion({ ...region });
         });
 
-    }, [props.regions]);
+    }, [regions]);
+
+    // On drag
+    useEffect(() => {
+        if (activeTool === DesignerTool.MAIN) {
+            dispatch(seekTo(dragPos));
+        }
+        else if (activeTool === DesignerTool.TRIMMER) {
+            console.log('Trimmer waveform onDrag. Mutating trimmer regions...');
+
+            const startSec = (audioBufferFrameCount / 44100) * trimmerStartPos;
+            const endSec = (audioBufferFrameCount / 44100) * trimmerEndPos;
+            const positionSec = (audioBufferFrameCount / 44100) * dragPos;
+            const isStartCloser = (Math.abs(startSec - positionSec) < Math.abs(endSec - positionSec));
+
+            if (isStartCloser) {
+                dispatch(setTrimmerStartPos(dragPos));
+            }
+            else {
+                dispatch(setTrimmerEndPos(dragPos));
+            }
+
+            dispatch(pause());
+        }
+    }, [dragPos]);
+
+    // On drag finish
+    useEffect(() => {
+        if (activeTool === DesignerTool.MAIN) {
+            dispatch(seekTo(dragPos));
+        }
+        else if (activeTool === DesignerTool.TRIMMER) {
+            console.log('Trimmer waveform onDragFinish');
+            const startSec = (audioBufferFrameCount / 44100) * trimmerStartPos;
+            const endSec = (audioBufferFrameCount / 44100) * trimmerEndPos;
+            const positionSec = (audioBufferFrameCount / 44100) * dragPos;
+            const isStartCloser = (Math.abs(startSec - positionSec) < Math.abs(endSec - positionSec));
+
+            const previewPlaybackDuration = 1.5;
+            const duration = audioBufferFrameCount / 44100;
+
+            if (isStartCloser) {
+                dispatch(seekTo(dragPos));
+                dispatch(setTrimmerStartPos(dragPos));
+                (endSec - positionSec) > previewPlaybackDuration ?
+                    dispatch(playUntil((positionSec + 1.5) / duration)) :
+                    dispatch(playUntil(endSec));
+            }
+            else {
+                dispatch(playUntil(positionSec));
+                if ((positionSec - startSec) > previewPlaybackDuration) {
+                    const pos = Clamp(((positionSec - previewPlaybackDuration) / duration), 0, 1);
+                    dispatch(seekTo(pos));
+                }
+                else {
+                    const pos = Clamp(startSec / duration, 0, 1);
+                    dispatch(seekTo(pos));
+                }
+            }
+
+            dispatch(play());
+        }
+    }, [dragFinishSignal]);
 
 
 
@@ -298,16 +355,26 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
     */
 
     const handleAudioProcess = () => {
-        props.audioProcessWavesurferCallback(wavesurfer.current!.getCurrentTime());
+        wavesurferPosition.current = wavesurfer.current!.getCurrentTime();
     }
     const handleFinish = () => {
-        props.finishWavesurferCallback();
+        wavesurferPosition.current = 0;
+        dispatch(seekTo(0));
+        dispatch(pause());
     }
     const handlePause = () => {
-        props.pauseWavesurferCallback(wavesurfer.current!.getCurrentTime());
+        console.log('wavesurfer pause fired');
+
+        const position = wavesurfer.current!.getCurrentTime();
+        // Only pause state if position is at trimmer end
+        console.log(`position = ${position}, trimmerPlayEnd = ${trimmerEndPos}`);
+
+        if (trimmerEndPos && Math.abs(position - trimmerEndPos) <= 0.01) {
+            dispatch(pause());
+        }
     }
     const handleSeek = () => {
-        props.seekWavesurferCallback(wavesurfer.current!.getCurrentTime());
+        wavesurferPosition.current = wavesurfer.current!.getCurrentTime();
     }
 
     return (
@@ -328,5 +395,4 @@ function Waveform(props: WaveformOptions & WaveformCallbacks & WaveformInteracti
     )
 }
 
-export { WaveformOptions, WaveformCallbacks, WaveformInteractionCallbacks };
 export default Waveform;

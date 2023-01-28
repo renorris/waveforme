@@ -3,29 +3,32 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 
-import TrimmerControls, { TrimmerControlsCallbacks } from '../TrimmerControls';
+import TrimmerControls from '../TrimmerControls';
+import { useAppSelector, useAppDispatch } from '../../../state/hooks';
+import { AudioBufferData, setAudioBufferData, indicateTrimmerComplete, pause, seekTo, setTrimmerStartPos, setTrimmerEndPos, setRegions } from '../designerSlice';
+import { generateTrimmerRegion } from '../util';
 
-interface TrimmerOptions {
-    audioContext: AudioContext,
-    audioBuffer: AudioBuffer,
-    duration: number,
+function Trimmer() {
 
-    shouldTrim: boolean,
-    beginSec: React.MutableRefObject<number>,
-    endSec: React.MutableRefObject<number>,
-}
-
-interface TrimmerCallbacks {
-    trimCompleteCallback: (audioBuffer: AudioBuffer) => void,
-}
-
-function Trimmer(props: TrimmerOptions & TrimmerCallbacks) {
+    const dispatch = useAppDispatch();
+    const trimSignal = useAppSelector(state => state.designer.trimSignal);
+    const trimmerStartPos = useAppSelector(state => state.designer.trimmerStartPos);
+    const trimmerEndPos = useAppSelector(state => state.designer.trimmerEndPos);
+    const audioBufferFrameCount = useAppSelector(state => state.designer.audioBufferFrameCount);
+    const channelData = useAppSelector(state => state.designer.audioBufferChannelData);
 
     /*
         AUDIO BUFFER SLICER
     */
 
-    const sliceAudioBuffer = (buffer: AudioBuffer, beginSec: number, endSec: number): AudioBuffer => {
+    const sliceAudioBuffer = () => {
+        const audioCtx = new OfflineAudioContext(1, 128, 44100);
+        const buffer = audioCtx.createBuffer(1, audioBufferFrameCount, 44100);
+        buffer.copyToChannel(channelData, 0);
+
+        const beginSec = (audioBufferFrameCount / 44100) * trimmerStartPos;
+        const endSec = (audioBufferFrameCount / 44100) * trimmerEndPos;
+
         const duration = buffer.duration;
         const channels = buffer.numberOfChannels;
         const rate = buffer.sampleRate;
@@ -45,7 +48,8 @@ function Trimmer(props: TrimmerOptions & TrimmerCallbacks) {
         let newAudioBuffer: AudioBuffer;
 
         try {
-            newAudioBuffer = props.audioContext.createBuffer(channels, sampleCount, rate);
+            const audioContext = new OfflineAudioContext(1, 128, 44100);
+            newAudioBuffer = audioContext.createBuffer(channels, sampleCount, rate);
             const tempArray = new Float32Array(sampleCount);
 
             for (let channel = 0; channel < channels; channel++) {
@@ -57,7 +61,11 @@ function Trimmer(props: TrimmerOptions & TrimmerCallbacks) {
             throw new Error(error);
         }
 
-        return newAudioBuffer;
+        const newAudioBufferData: AudioBufferData = {
+            channelData: newAudioBuffer.getChannelData(0),
+            frameCount: newAudioBuffer.length,
+        }
+        dispatch(setAudioBufferData(newAudioBufferData));
     }
 
 
@@ -67,14 +75,43 @@ function Trimmer(props: TrimmerOptions & TrimmerCallbacks) {
     */
 
     useEffect(() => {
-        if (props.shouldTrim) props.trimCompleteCallback(sliceAudioBuffer(props.audioBuffer, props.beginSec.current!, props.endSec.current!));
-    }, [props.shouldTrim]);
+        if (!trimSignal) {
+            return;
+        }
 
-    
+        sliceAudioBuffer();
+        dispatch(indicateTrimmerComplete());
+
+    }, [trimSignal]);
+
+
+
+    // Configurator
+    useEffect(() => {
+        console.log('Setting up trimmer');
+        const duration = audioBufferFrameCount / 44100;
+        dispatch(setTrimmerStartPos(0.3));
+        dispatch(setTrimmerEndPos(0.7));
+
+        return () => {
+            console.log('Cleaning up trimmer/regions');
+            dispatch(setRegions([]));
+            dispatch(seekTo(0));
+            dispatch(pause());
+        }
+
+    }, [])
+
+    // Update regions on start/end pos changes
+    useEffect(() => {
+        const duration = audioBufferFrameCount / 44100;
+        const trimmerRegion = generateTrimmerRegion(duration * trimmerStartPos, duration * trimmerEndPos);
+        dispatch(setRegions([trimmerRegion]));
+    }, [trimmerStartPos, trimmerEndPos]);
+
 
     // Return nothing. The trimmer component has no UI. It only performs trim logic based on props.
     return (<></>);
 }
 
-export { TrimmerCallbacks };
 export default Trimmer;

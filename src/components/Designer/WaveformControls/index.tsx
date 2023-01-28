@@ -6,10 +6,12 @@ import FormRange from 'react-bootstrap/esm/FormRange'
 import Button from 'react-bootstrap/esm/Button';
 import { Container, Row, Col } from 'react-bootstrap';
 import Modal from 'react-bootstrap/esm/Modal';
-import { Pause, PlayFill, Scissors, ArrowCounterclockwise } from 'react-bootstrap-icons';
-
-import { WaveformOptions } from '../Waveform';
+import { Pause, PlayFill, Scissors, ArrowCounterclockwise, Check2Square, CheckCircleFill, ArrowRight } from 'react-bootstrap-icons';
 import Stack from 'react-bootstrap/esm/Stack';
+
+import { useAppSelector, useAppDispatch } from '../../../state/hooks';
+import { seekTo, pause, play, playPause, AudioBufferData, setAudioBufferData, setOrigMp3File, switchActiveTool, DesignerTool, toggleNormalize, setBarHeight, setBarWidth, setBarGap } from '../designerSlice';
+import { useSelector } from 'react-redux';
 
 interface WaveformControlsCallbacks {
     playButtonClickCallback: () => void,
@@ -21,79 +23,110 @@ interface WaveformControlsCallbacks {
     revertButtonCallback: () => void,
 }
 
-function WaveformControls(props: WaveformControlsCallbacks & { waveformOptions: WaveformOptions }) {
+function WaveformControls() {
 
     const [showRevertModal, setShowRevertModal] = useState<boolean>(false);
 
+    const dispatch = useAppDispatch();
+    const playing = useAppSelector(state => state.designer.playing);
+    const normalize = useAppSelector(state => state.designer.normalize);
+    const barHeight = useAppSelector(state => state.designer.barHeight);
+    const barWidth = useAppSelector(state => state.designer.barWidth);
+    const barGap = useAppSelector(state => state.designer.barGap);
+
     // Revert button handler
-    const revertButtonHandler = () => {
+    const revertButtonHandler = async () => {
         setShowRevertModal(false);
-        props.revertButtonCallback();
+
+        console.log('Encoding complete... setting state');
+
+        // Decode mp3 into AudioBuffer & re-set to redux state
+        const rawArray = useAppSelector(state => state.designer.origMp3File);
+        const audioContext = new OfflineAudioContext(128, 1, 44100);
+        const audioBuffer = await audioContext.decodeAudioData(rawArray);
+        const channelData = audioBuffer.getChannelData(0);
+
+        const audioBufferData: AudioBufferData = {
+            channelData: channelData,
+            frameCount: audioBuffer.length,
+        }
+        dispatch(setAudioBufferData(audioBufferData));
     }
 
     return (
-        <Container fluid className='justify-content-center align-items-center'>
-            <Row className='justify-content-center mt-1'>
-                <Col xs='4' sm='3' className='d-flex justify-content-center ps-0 pe-1'>
+        <Container fluid>
+            <Row className='justify-content-center align-items-center mt-1'>
+                <Col xs='4' className='d-flex justify-content-center ps-0 pe-1'>
                     <Button style={{ width: '100%' }} onClick={() => setShowRevertModal(true)} variant='warning'>
                         <ArrowCounterclockwise size={25} />
                     </Button>
                 </Col>
 
-                <Col xs='4' sm='3' className='d-flex justify-content-center px-1'>
-                    <Button style={{ width: '100%' }} onClick={props.trimCallback} variant='primary'>
+                <Col xs='4' className='d-flex justify-content-center px-1'>
+                    <Button style={{ width: '100%' }} onClick={() => dispatch(switchActiveTool(DesignerTool.TRIMMER))} variant='primary'>
                         <Scissors size={25} style={{ transform: 'rotate(90deg)' }} />
                     </Button>
                 </Col>
 
-                <Col xs='4' sm='3' className='d-flex justify-content-center pe-0 ps-1'>
-                    <Button style={{ width: '100%' }} onClick={props.playButtonClickCallback} variant={props.waveformOptions.playing ? 'danger' : 'success'}>
-                        {props.waveformOptions.playing ? <Pause size={25} /> : <PlayFill size={25} />}
+                <Col xs='4' className='d-flex justify-content-center pe-0 ps-1'>
+                    <Button style={{ width: '100%' }} onClick={() => dispatch(playPause())} variant={playing ? 'danger' : 'success'}>
+                        {playing ? <Pause size={25} /> : <PlayFill size={25} />}
                     </Button>
                 </Col>
             </Row>
 
-            <Row className='mt-4'>
+            <Row className='justify-content-center align-items-center mt-4'>
                 <Col xs='4' className='gap-1 p-0'>
                     <Button
-                        variant={props.waveformOptions.normalize ? 'primary' : 'outline-danger'}
-                        onClick={props.normalizeButtonClickCallback}
+                        variant={normalize ? 'primary' : 'outline-danger'}
+                        onClick={() => dispatch(toggleNormalize())}
                     >
                         Normalize
                     </Button>
                 </Col>
 
                 <Col xs='8' className='gap-1 p-0'>
-                    <div className={props.waveformOptions.normalize ? 'fw-lighter' : ''}>
-                        {props.waveformOptions.normalize ? 'Normalized' : 'Intensity'}
+                    <div className={normalize ? 'fw-lighter' : ''}>
+                        {normalize ? 'Normalized' : 'Intensity'}
                     </div>
                     <FormRange
                         id='barHeightRange'
                         min='0.1'
                         max='5'
-                        defaultValue={props.waveformOptions.barHeight}
+                        defaultValue={barHeight}
                         step='0.01'
-                        disabled={props.waveformOptions.normalize}
-                        onChange={event => props.barHeightRangeChangeCallback(parseFloat(event.target.value))}
+                        disabled={normalize}
+                        onChange={event => dispatch(setBarHeight(parseFloat(event.target.value)))}
                     />
                     <div>Width</div>
                     <FormRange
                         id='barWidthRange'
                         min='1'
                         max='15'
-                        defaultValue={props.waveformOptions.barWidth}
+                        defaultValue={barWidth}
                         step='0.01'
-                        onChange={event => props.barWidthRangeChangeCallback(parseFloat(event.target.value))}
+                        onChange={event => dispatch(setBarWidth(parseFloat(event.target.value)))}
                     />
                     <div>Spacing</div>
                     <FormRange
                         id='barGapRange'
                         min='1'
                         max='10'
-                        defaultValue={props.waveformOptions.barGap}
+                        defaultValue={barGap}
                         step='0.01'
-                        onChange={event => props.barGapRangeChangeCallback(parseFloat(event.target.value))}
+                        onChange={event => dispatch(setBarGap(parseFloat(event.target.value)))}
                     />
+                </Col>
+            </Row>
+
+            <Row className='justify-content-end align-items-center mt-3'>
+                <Col xs='4' className='d-flex justify-content-center align-items-center p-0'>
+                    <Button
+                        style={{ width: '100%' }}
+                        variant={'outline-success'}
+                    >
+                        <CheckCircleFill size={25} /> <ArrowRight size={25} />
+                    </Button>
                 </Col>
             </Row>
 

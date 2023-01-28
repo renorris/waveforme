@@ -1,20 +1,21 @@
 // Waveforme AudioUploader index.tsx
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useDebugValue } from 'react';
 import { Button, Col, Container, Modal, Row, Stack } from 'react-bootstrap';
 import { InfoCircle } from 'react-bootstrap-icons';
 
-interface AudioUploaderCallbacks {
-    audioReadyCallback: (file: File) => void,
-}
+import { useAppDispatch } from '../../../state/hooks';
+import { DesignerTool, switchActiveTool, setAudioBufferData, setOrigMp3File, AudioBufferData } from '../designerSlice';
 
-function AudioUploader(props: AudioUploaderCallbacks) {
+function AudioUploader() {
 
     const [file, setFile] = useState<File | null>(null);
     const [isAudioExtracting, setIsAudioExtracting] = useState<boolean>(false);
     const [audioReady, setAudioReady] = useState<boolean>(false);
     const [showAudioTrimHelp, setShowAudioTrimHelp] = useState<boolean>(false);
+
+    const dispatch = useAppDispatch();
 
     // Set file state and signal ffmpeg to decode
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +60,27 @@ function AudioUploader(props: AudioUploaderCallbacks) {
 
             setAudioReady(true);
             setIsAudioExtracting(false);
-            props.audioReadyCallback(new File([result.MEMFS[0].data], result.MEMFS[0].name));
+
+            const resultFile = new File([result.MEMFS[0].data], result.MEMFS[0].name, { type: 'audio/mp3' });
+
+            console.log('Encoding complete... setting state');
+            // Decode mp3 into AudioBuffer
+            const audioContext = new OfflineAudioContext(1, 128, 44100);
+            const audioBuffer = await audioContext.decodeAudioData(await resultFile.arrayBuffer());
+            const channelData = audioBuffer.getChannelData(0);
+
+            const audioBufferData: AudioBufferData = {
+                channelData: channelData,
+                frameCount: audioBuffer.length,
+            }
+            dispatch(setAudioBufferData(audioBufferData));
+            
+            // Store original mp3 blob for a revert feature
+            const rawFileArray = new Uint8Array(await resultFile.arrayBuffer());
+            dispatch(setOrigMp3File(rawFileArray));
+
+            // Switch to main designer tool
+            dispatch(switchActiveTool(DesignerTool.MAIN));
         }
 
         // Call async ffmpeg runner
@@ -68,6 +89,8 @@ function AudioUploader(props: AudioUploaderCallbacks) {
         }
 
     }, [file]);
+
+
 
     // DEV:
     useEffect(() => {
@@ -163,5 +186,4 @@ function AudioUploader(props: AudioUploaderCallbacks) {
     );
 }
 
-export { AudioUploaderCallbacks };
 export default AudioUploader;
