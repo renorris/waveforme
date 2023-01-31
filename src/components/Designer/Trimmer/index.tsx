@@ -5,15 +5,14 @@ import React, { useEffect, useState, useRef } from 'react';
 
 import TrimmerControls from '../TrimmerControls';
 import { useAppSelector, useAppDispatch } from '../../../state/hooks';
-import { AudioBufferData, setAudioBufferData, indicateTrimmerComplete, pause, seekTo, setTrimmerStartPos, setTrimmerEndPos, setRegions } from '../designerSlice';
+import { AudioBufferData, setAudioBufferData, indicateTrimmerComplete, pause, seekTo, setRegions, setTrimmerRegionBoundaries } from '../designerSlice';
 import { generateTrimmerRegion } from '../util';
 
 function Trimmer() {
 
     const dispatch = useAppDispatch();
     const trimSignal = useAppSelector(state => state.designer.trimSignal);
-    const trimmerStartPos = useAppSelector(state => state.designer.trimmerStartPos);
-    const trimmerEndPos = useAppSelector(state => state.designer.trimmerEndPos);
+    const trimmerRegionBoundaries = useAppSelector(state => state.designer.trimmerRegionBoundaries);
     const audioBufferFrameCount = useAppSelector(state => state.designer.audioBufferFrameCount);
     const channelData = useAppSelector(state => state.designer.audioBufferChannelData);
 
@@ -26,8 +25,8 @@ function Trimmer() {
         const buffer = audioCtx.createBuffer(1, audioBufferFrameCount, 44100);
         buffer.copyToChannel(channelData, 0);
 
-        const beginSec = (audioBufferFrameCount / 44100) * trimmerStartPos;
-        const endSec = (audioBufferFrameCount / 44100) * trimmerEndPos;
+        const beginSec = (audioBufferFrameCount / 44100) * trimmerRegionBoundaries.start;
+        const endSec = (audioBufferFrameCount / 44100) * trimmerRegionBoundaries.end;
 
         const duration = buffer.duration;
         const channels = buffer.numberOfChannels;
@@ -90,8 +89,7 @@ function Trimmer() {
     useEffect(() => {
         console.log('Setting up trimmer');
         const duration = audioBufferFrameCount / 44100;
-        dispatch(setTrimmerStartPos(0.3));
-        dispatch(setTrimmerEndPos(0.7));
+        dispatch(setTrimmerRegionBoundaries({start: 0.3, end: 0.7}));
 
         return () => {
             console.log('Cleaning up trimmer/regions');
@@ -105,9 +103,11 @@ function Trimmer() {
     // Update regions on start/end pos changes
     useEffect(() => {
         const duration = audioBufferFrameCount / 44100;
-        const trimmerRegion = generateTrimmerRegion(duration * trimmerStartPos, duration * trimmerEndPos);
+        const startSec = duration * trimmerRegionBoundaries.start;
+        const endSec = duration * trimmerRegionBoundaries.end;
+        const trimmerRegion = generateTrimmerRegion(startSec, endSec);
         dispatch(setRegions([trimmerRegion]));
-    }, [trimmerStartPos, trimmerEndPos]);
+    }, [trimmerRegionBoundaries]);
 
 
     // Return nothing. The trimmer component has no UI. It only performs trim logic based on props.

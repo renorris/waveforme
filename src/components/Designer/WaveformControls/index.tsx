@@ -13,16 +13,6 @@ import { useAppSelector, useAppDispatch } from '../../../state/hooks';
 import { seekTo, pause, play, playPause, AudioBufferData, setAudioBufferData, setOrigMp3File, switchActiveTool, DesignerTool, toggleNormalize, setBarHeight, setBarWidth, setBarGap } from '../designerSlice';
 import { useSelector } from 'react-redux';
 
-interface WaveformControlsCallbacks {
-    playButtonClickCallback: () => void,
-    normalizeButtonClickCallback: () => void,
-    barHeightRangeChangeCallback: (value: number) => void,
-    barWidthRangeChangeCallback: (value: number) => void,
-    barGapRangeChangeCallback: (value: number) => void,
-    trimCallback: () => void,
-    revertButtonCallback: () => void,
-}
-
 function WaveformControls() {
 
     const [showRevertModal, setShowRevertModal] = useState<boolean>(false);
@@ -33,6 +23,7 @@ function WaveformControls() {
     const barHeight = useAppSelector(state => state.designer.barHeight);
     const barWidth = useAppSelector(state => state.designer.barWidth);
     const barGap = useAppSelector(state => state.designer.barGap);
+    const origMp3File = useAppSelector(state => state.designer.origMp3File);
 
     // Revert button handler
     const revertButtonHandler = async () => {
@@ -41,9 +32,8 @@ function WaveformControls() {
         console.log('Encoding complete... setting state');
 
         // Decode mp3 into AudioBuffer & re-set to redux state
-        const rawArray = useAppSelector(state => state.designer.origMp3File);
-        const audioContext = new OfflineAudioContext(128, 1, 44100);
-        const audioBuffer = await audioContext.decodeAudioData(rawArray);
+        const audioContext = new OfflineAudioContext(1, 128, 44100);
+        const audioBuffer = await audioContext.decodeAudioData(origMp3File.buffer.slice(0));
         const channelData = audioBuffer.getChannelData(0);
 
         const audioBufferData: AudioBufferData = {
@@ -159,5 +149,4 @@ function WaveformControls() {
     )
 }
 
-export { WaveformControlsCallbacks };
 export default WaveformControls;

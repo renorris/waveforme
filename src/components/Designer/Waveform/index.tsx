@@ -28,8 +28,7 @@ function Waveform() {
     const seek = useAppSelector(state => state.designer.seek);
     const audioBufferChannelData = useAppSelector(state => state.designer.audioBufferChannelData);
     const audioBufferFrameCount = useAppSelector(state => state.designer.audioBufferFrameCount);
-    const trimmerEndPos = useAppSelector(state => state.designer.trimmerEndPos);
-    const trimmerStartPos = useAppSelector(state => state.designer.trimmerStartPos);
+    const trimmerRegionBoundaries = useAppSelector(state => state.designer.trimmerRegionBoundaries);
     const playEnd = useAppSelector(state => state.designer.playEnd);
     const regions = useAppSelector(state => state.designer.regions);
     const dragPos = useAppSelector(state => state.designer.dragPos);
@@ -158,6 +157,7 @@ function Waveform() {
         normalize
         audioBuffer
         audioContext
+        activeTool
     */
 
     useEffect(() => {
@@ -223,7 +223,7 @@ function Waveform() {
             wavesurfer.current!.seekTo((1 / wavesurfer.current!.getDuration()) * wavesurferPosition.current);
 
             // Play the waveform if props deem so
-            playing ? wavesurfer.current!.play() : wavesurfer.current!.pause();
+            if (playing) wavesurfer.current!.play();
 
             // Set the play end if passed in props
             (playEnd !== null) ?
@@ -235,7 +235,7 @@ function Waveform() {
         render();
     }, [
         playing, heightMultiplier, barGap, barWidth,
-        barHeight, normalize, audioBufferChannelData
+        barHeight, normalize, audioBufferChannelData,
     ]);
 
     // Cleanup when unmounted
@@ -294,8 +294,8 @@ function Waveform() {
         else if (activeTool === DesignerTool.TRIMMER) {
             console.log('Trimmer waveform onDrag. Mutating trimmer regions...');
 
-            const startSec = (audioBufferFrameCount / 44100) * trimmerStartPos;
-            const endSec = (audioBufferFrameCount / 44100) * trimmerEndPos;
+            const startSec = (audioBufferFrameCount / 44100) * trimmerRegionBoundaries.start;
+            const endSec = (audioBufferFrameCount / 44100) * trimmerRegionBoundaries.end;
             const positionSec = (audioBufferFrameCount / 44100) * dragPos;
             const isStartCloser = (Math.abs(startSec - positionSec) < Math.abs(endSec - positionSec));
 
@@ -317,8 +317,8 @@ function Waveform() {
         }
         else if (activeTool === DesignerTool.TRIMMER) {
             console.log('Trimmer waveform onDragFinish');
-            const startSec = (audioBufferFrameCount / 44100) * trimmerStartPos;
-            const endSec = (audioBufferFrameCount / 44100) * trimmerEndPos;
+            const startSec = (audioBufferFrameCount / 44100) * trimmerRegionBoundaries.start;
+            const endSec = (audioBufferFrameCount / 44100) * trimmerRegionBoundaries.end;
             const positionSec = (audioBufferFrameCount / 44100) * dragPos;
             const isStartCloser = (Math.abs(startSec - positionSec) < Math.abs(endSec - positionSec));
 
@@ -365,11 +365,13 @@ function Waveform() {
     const handlePause = () => {
         console.log('wavesurfer pause fired');
 
-        const position = wavesurfer.current!.getCurrentTime();
+        const positionSec = wavesurfer.current!.getCurrentTime();
+        const startSec = (audioBufferFrameCount / 44100) * trimmerRegionBoundaries.start;
+        const endSec = (audioBufferFrameCount / 44100) * trimmerRegionBoundaries.end;
         // Only pause state if position is at trimmer end
-        console.log(`position = ${position}, trimmerPlayEnd = ${trimmerEndPos}`);
+        console.log(`positionSec = ${positionSec}, playEnd = ${playEnd}`);
 
-        if (trimmerEndPos && Math.abs(position - trimmerEndPos) <= 0.01) {
+        if (endSec && Math.abs(positionSec - endSec) <= 0.01) {
             dispatch(pause());
         }
     }

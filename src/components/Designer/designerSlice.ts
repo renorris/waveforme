@@ -23,6 +23,11 @@ interface AudioBufferData {
     frameCount: number,
 }
 
+interface TrimmerRegionBoundaries {
+    start: number,
+    end: number,
+}
+
 interface DesignerState {
     audioBufferChannelData: Float32Array,
     audioBufferFrameCount: number,
@@ -44,8 +49,8 @@ interface DesignerState {
     seek: number,
     playEnd: number | null,
     trimSignal: boolean,
-    trimmerStartPos: number,
-    trimmerEndPos: number,
+
+    trimmerRegionBoundaries: TrimmerRegionBoundaries,
 
     regions: RegionParams[],
 }
@@ -71,8 +76,7 @@ const initialState: DesignerState = {
     seek: 0,
     playEnd: null,
     trimSignal: false,
-    trimmerStartPos: 0,
-    trimmerEndPos: 0,
+    trimmerRegionBoundaries: { start: 0.3, end: 0.7 },
 
     regions: [],
 }
@@ -140,11 +144,14 @@ export const designerSlice = createSlice({
         indicateTrimmerComplete: (state) => {
             state.trimSignal = false;
         },
+        setTrimmerRegionBoundaries: (state, action: PayloadAction<TrimmerRegionBoundaries>) => {
+            state.trimmerRegionBoundaries = action.payload;
+        },
         setTrimmerStartPos: (state, action: PayloadAction<number>) => {
-            state.trimmerStartPos = action.payload;
+            state.trimmerRegionBoundaries = { start: action.payload, end: state.trimmerRegionBoundaries.end };
         },
         setTrimmerEndPos: (state, action: PayloadAction<number>) => {
-            state.trimmerEndPos = action.payload;
+            state.trimmerRegionBoundaries = { start: state.trimmerRegionBoundaries.end, end: action.payload };
         },
 
         setDragPos: (state, action: PayloadAction<number>) => {
@@ -167,6 +174,7 @@ export const {
     play, pause, seekTo, playPause,
     playUntil, disablePlayEnd, toggleNormalize,
     switchActiveTool, signalTrimmerStart, indicateTrimmerComplete,
+    setTrimmerRegionBoundaries,
     setTrimmerStartPos, setTrimmerEndPos, setDragPos
 } = designerSlice.actions;
 

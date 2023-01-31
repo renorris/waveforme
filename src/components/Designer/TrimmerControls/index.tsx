@@ -8,17 +8,16 @@ import { ArrowReturnLeft, Check2Square, InfoCircle, Pause, PlayFill, Scissors, S
 import { Col, Row } from 'react-bootstrap';
 
 import { useAppSelector, useAppDispatch } from '../../../state/hooks';
-import { signalTrimmerStart, pause, play, switchActiveTool, DesignerTool } from '../designerSlice';
+import { signalTrimmerStart, playPause, switchActiveTool, DesignerTool } from '../designerSlice';
 
 function TrimmerControls() {
 
     const dispatch = useAppDispatch();
     const playing = useAppSelector(state => state.designer.playing);
-    const trimmerEndPos = useAppSelector(state => state.designer.trimmerEndPos);
-    const trimmerStartPos = useAppSelector(state => state.designer.trimmerStartPos);
+    const trimmerRegionBoundaries = useAppSelector(state => state.designer.trimmerRegionBoundaries);
 
     const handlePlayPause = () => {
-        playing ? dispatch(pause()) : dispatch(play());
+        dispatch(playPause());
     }
 
     return (
