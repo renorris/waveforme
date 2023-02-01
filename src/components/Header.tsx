@@ -10,7 +10,7 @@ import NavLink from "react-bootstrap/esm/NavLink";
 import Navbar from "react-bootstrap/esm/Navbar";
 import { Link } from "react-router-dom";
 
-import logo from "../../assets/logo.svg";
+import logo from "../assets/logo.svg";
 
 function Header() {
     return (
