@@ -6,6 +6,8 @@ import React from 'react';
 import { useAppSelector, useAppDispatch } from '../storeHooks';
 
 import Uploader from './Uploader';
+import Waveform from './Waveform';
+import WaveformControls from './WaveformControls';
 
 export default function Designer() {
     const dispatch = useAppDispatch();
@@ -14,12 +16,16 @@ export default function Designer() {
 
     return (
         <>
-            <p>Active page: {activePage}</p>
+            <p>Active page - <span className='font-monospace'>{activePage}</span></p>
             { activePage === 'uploader' && 
                 <Uploader />
             }
             { activePage === 'main' &&
-                <p>Main - URL: {mp3URL}</p>
+                <>
+                    <p>mp3 - <a href={mp3URL as string} target='_blank' className='font-monospace'>{mp3URL}</a></p>
+                    <Waveform />
+                    <WaveformControls />
+                </>
             }
         </>
     );

@@ -43,7 +43,7 @@ module.exports = (env) => {
         },
 
         devServer: {
-            host: '0.0.0.0',
+            host: 'localhost',
             hot: true,
             headers: {
                 "Access-Control-Allow-Origin": "*",
