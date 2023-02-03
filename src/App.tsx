@@ -15,7 +15,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
     return (
-        <React.StrictMode>
+        //<React.StrictMode>
             <Provider store={store}>
                 <Routes>
                     <Route path="/" element={<HomePage />} />
@@ -23,7 +23,7 @@ function App() {
                     <Route path="/design" element={<DesignPage />} />
                 </Routes>
             </Provider>
-        </React.StrictMode>
+        //</React.StrictMode>
     )
 }
 

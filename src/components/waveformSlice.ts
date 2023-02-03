@@ -64,12 +64,21 @@ export const waveformState = createSlice({
             newWaveformRenderOptions.audioNormalization = action.payload;
             state.waveformRenderOptions = newWaveformRenderOptions;
         },
+        toggleAudioNormalization: (state) => {
+            let newWaveformRenderOptions = {...state.waveformRenderOptions};
+            newWaveformRenderOptions.audioNormalization = !newWaveformRenderOptions.audioNormalization;
+            state.waveformRenderOptions = newWaveformRenderOptions;
+        },
+
 
         play: state => {
             state.playbackDirective = 'play';
         },
         pause: state => {
             state.playbackDirective = 'pause';
+        },
+        playPause: state => {
+            state.playbackDirective = state.playbackDirective === 'play' ? 'pause' : 'play';
         },
         stop: state => {
             state.playbackDirective = 'stop';
@@ -86,8 +95,10 @@ export const {
     setBarWidth, 
     setBarGap, 
     setAudioNormalization,
+    toggleAudioNormalization,
     play,
     pause,
+    playPause,
     stop,
 } = waveformState.actions;
 export default waveformState.reducer;

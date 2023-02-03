@@ -4,7 +4,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface DesignerState {
-    activePage: 'uploader' | 'main',
+    activePage: 'uploader' | 'main' | 'trimmer',
     localOriginalMP3URL: string | null,
 }
 
