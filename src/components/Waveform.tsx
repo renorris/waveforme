@@ -70,17 +70,24 @@ export default function Waveform() {
         wavesurfer.current!.loadDecodedBuffer(audioBuf);
     }
 
-    // Wavesurfer re-set parameters helper
+    // Wavesurfer reset parameters helper
     const resetParametersOnWavesurfer = (params: WaveSurferParams) => {
         // Set new params
         wavesurfer.current!.params = Object.assign({}, wavesurfer.current!.defaultParams, params);
 
-        // Re-create drawer
+        // Destroy drawer
         wavesurfer.current!.drawer.destroy();
+
+        // Re-create
         wavesurfer.current!.createDrawer();
 
         // Draw the buffer
         wavesurfer.current!.drawBuffer();
+
+        // Set progress synchronously once here to remove flickering, otherwise wavesurfer 
+        // waits for an audioprocess event to update the position, which is enough to flicker
+        // back to 0 for a few ms
+        wavesurfer.current!.drawer.progress(wavesurfer.current!.backend.getPlayedPercents());
     }
 
     // Wait for wavesurfer ref load helper
@@ -163,6 +170,8 @@ export default function Waveform() {
 
 
     // Whenever waveform render options change, re-draw wavesurfer
+    // Also re-render params on playbackDirective change. (Syncs playback
+    // cursor visibility.)
     useEffect(() => {
 
         const run = async () => {
@@ -188,7 +197,7 @@ export default function Waveform() {
 
         run();
 
-    }, [waveformRenderOptions]);
+    }, [waveformRenderOptions, playbackDirective]);
 
 
 
