@@ -14,12 +14,6 @@ import logo from "../assets/logo.svg";
 
 function Header() {
     return (
-        // <div className='header'>
-        //     <Logo />
-        //     <HeaderItem>
-        //         <div className='headerTitle'>Waveforme</div>
-        //     </HeaderItem>
-        // </div>
         <Navbar bg="grey" className="border-bottom px-0 mx-0 py-0 my-0">
             <Container fluid className="justify-content-start">
                 <Nav.Link as={Link} to="/">
@@ -58,7 +52,6 @@ function Header() {
                         </Dropdown>
                     </Nav>
                 </Container>
-
             </Container>
         </Navbar>
     );
