@@ -8,6 +8,7 @@ import { useAppSelector, useAppDispatch } from '../storeHooks';
 import Uploader from './Uploader';
 import Waveform from './Waveform';
 import WaveformControls from './WaveformControls';
+import TrimmerControls from './TrimmerControls';
 
 export default function Designer() {
     const dispatch = useAppDispatch();
@@ -16,15 +17,22 @@ export default function Designer() {
 
     return (
         <>
-            <p>Active page - <span className='font-monospace'>{activePage}</span></p>
+            {/* <div>Active page - <span className='font-monospace'>{activePage}</span></div>
+            <div>orig MP3 URL - <a href={mp3URL as string} target='_blank' className='font-monospace'>{mp3URL}</a></div> */}
+            
             { activePage === 'uploader' && 
                 <Uploader />
             }
             { activePage === 'main' &&
                 <>
-                    <p>mp3 - <a href={mp3URL as string} target='_blank' className='font-monospace'>{mp3URL}</a></p>
                     <Waveform />
                     <WaveformControls />
+                </>
+            }
+            { activePage === 'trimmer' &&
+                <>
+                    <Waveform />
+                    <TrimmerControls />
                 </>
             }
         </>

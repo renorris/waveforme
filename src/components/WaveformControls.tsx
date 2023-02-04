@@ -8,7 +8,7 @@ import { ArrowCounterclockwise, Scissors, Pause, PlayFill } from 'react-bootstra
 
 import { useAppSelector, useAppDispatch } from '../storeHooks';
 import { switchPage } from './designerSlice';
-import { playPause, setBarGap, setBarHeight, setBarWidth, toggleAudioNormalization } from './waveformSlice';
+import { playPause, setBarGap, setBarHeight, setBarWidth, toggleAudioNormalization, revertTrimmedSelectionToOriginal } from './waveformSlice';
 
 export default function WaveformControls() {
 
@@ -18,8 +18,15 @@ export default function WaveformControls() {
 
     const [showRevertModal, setShowRevertModal] = useState<boolean>(false);
 
+    const handleModalRevertButtonClick = () => {
+        setShowRevertModal(false);
+        dispatch(revertTrimmedSelectionToOriginal())
+    }
+
+    
+
     return (
-        <Container fluid className='justify-content-center align-items-center'>
+        <Container className='justify-content-center align-items-center'>
             <Row className='justify-content-center mt-1'>
                 <Col xs='4' sm='3' className='d-flex justify-content-center ps-0 pe-1'>
                     <Button style={{ width: '100%' }} onClick={() => setShowRevertModal(true)} variant='warning'>
@@ -103,7 +110,7 @@ export default function WaveformControls() {
                     <Button variant='success' onClick={() => setShowRevertModal(false)}>
                         Cancel
                     </Button>
-                    <Button variant='warning' onClick={() => { /* TODO: Implement audio reverter */ }}>
+                    <Button variant='warning' onClick={() => handleModalRevertButtonClick()}>
                         Yes
                     </Button>
                 </Modal.Footer>
