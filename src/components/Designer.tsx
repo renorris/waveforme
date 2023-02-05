@@ -9,6 +9,7 @@ import Uploader from './Uploader';
 import Waveform from './Waveform';
 import WaveformControls from './WaveformControls';
 import TrimmerControls from './TrimmerControls';
+import Export from './Export';
 
 export default function Designer() {
     const dispatch = useAppDispatch();
@@ -33,6 +34,11 @@ export default function Designer() {
                 <>
                     <Waveform />
                     <TrimmerControls />
+                </>
+            }
+            { activePage === 'exporter' &&
+                <>
+                    <Export />
                 </>
             }
         </>

@@ -22,6 +22,13 @@ export default function Uploader() {
         }
     }, []);
 
+    // Touch wavesurfer and ffmpeg helper
+    const touchLibraries = async () => {
+        import('ffmpeg.js/ffmpeg-mp4');
+        import('wavesurfer.js');
+        import('wavesurfer.js/src/plugin/regions');
+    }
+
     // Process input file, encode to audio/mp3, set window URL to store
     const processFile = async (file: File) => {
         console.log('[Uploader] Encoding audio...');
@@ -94,7 +101,7 @@ export default function Uploader() {
                             //style={{ maxWidth: '384px' }}
                             type='file'
                             accept='audio/*,video/*'
-                            //onClick={event => { touchFfmpeg(); touchWavesurfer(); }}
+                            onClick={touchLibraries}
                             onChange={(event) => processFile(event.target.files!.item(0)!)}
                         />
                     </Row>

@@ -12,7 +12,7 @@
  */
 
 const mp3UrlToAudioBuffer = async (url: string, start: number = 0, end: number = 1): Promise<AudioBuffer> => {
-    
+
     // Fetch audio from URL
     const res = await fetch(url);
     const blob = await res.blob();
@@ -74,5 +74,6 @@ const mp3UrlToAudioBuffer = async (url: string, start: number = 0, end: number =
 
     return newAudioBuf;
 }
+
 
 export { mp3UrlToAudioBuffer };

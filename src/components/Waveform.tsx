@@ -1,13 +1,15 @@
 // Waveforme Waveform.tsx
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
 import { clamp } from './waveformUtil';
+import html2canvas from 'html2canvas';
 
 import { useAppSelector, useAppDispatch } from '../storeHooks';
 import { stop, setSelectedRegionStart, setSelectedRegionEnd, resetState, play, pause } from './waveformSlice';
+import { setLocalWaveformImageURL } from './designerSlice';
 import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { mp3UrlToAudioBuffer } from './designerUtil';
 
@@ -116,7 +118,7 @@ export default function Waveform() {
 
 
     // Wavesurfer constructor/deconstructor
-    useEffect(() => {
+    useLayoutEffect(() => {
         const construct = async () => {
             console.log('Constructing wavesurfer');
             const WaveSurfer = (await import('wavesurfer.js')).default;
@@ -148,6 +150,9 @@ export default function Waveform() {
             newWavesurfer.on('audioprocess', setWavesurferPosition);
             newWavesurfer.on('stop', setWavesurferPosition);
 
+            // Draw an empty waveform as a temporary placeholder
+            newWavesurfer.empty();
+
             wavesurfer.current = newWavesurfer;
         }
 
@@ -155,8 +160,29 @@ export default function Waveform() {
 
         return () => {
             console.log('De-constructing wavesurfer');
-            if (wavesurfer.current) wavesurfer.current.destroy();
-            dispatch(resetState());
+
+            const deconstruct = async () => {
+                console.log('Saving an image of the waveform');
+                
+                const canvas = await html2canvas(waveformParentContainerRef.current!, {
+                    backgroundColor: '#FFFFFF',
+                });
+                const imageBlob = await new Promise<Blob | null>(resolve => {
+                    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8)
+                });
+                if (!imageBlob) throw Error('Unable to get image from canvas');
+                
+                const url = window.URL.createObjectURL(imageBlob);
+                dispatch(setLocalWaveformImageURL(url));
+
+                // Destroy wavesurfer instance
+                wavesurfer.current!.destroy();
+
+                // Call resetState to clean up stuff for next time
+                dispatch(resetState());
+            }
+
+            if (wavesurfer.current) deconstruct();
         };
     }, []);
 

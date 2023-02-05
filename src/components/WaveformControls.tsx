@@ -28,7 +28,7 @@ export default function WaveformControls() {
     return (
         <Container className='justify-content-center align-items-center'>
             <Row className='justify-content-center mt-1'>
-                <Col xs='4' sm='3' className='d-flex justify-content-center ps-0 pe-1'>
+                <Col xs='4' sm='3' className='d-flex justify-content-center ps-2 pe-1'>
                     <Button style={{ width: '100%' }} onClick={() => setShowRevertModal(true)} variant='warning'>
                         <ArrowCounterclockwise size={25} />
                     </Button>
@@ -40,7 +40,7 @@ export default function WaveformControls() {
                     </Button>
                 </Col>
 
-                <Col xs='4' sm='3' className='d-flex justify-content-center pe-0 ps-1'>
+                <Col xs='4' sm='3' className='d-flex justify-content-center ps-1 pe-2'>
                     <Button style={{ width: '100%' }} onClick={() => dispatch(playPause())} variant={playbackDirective === 'play' ? 'danger' : 'success'}>
                         {playbackDirective === 'play' ? <Pause size={25} /> : <PlayFill size={25} />}
                     </Button>
@@ -48,7 +48,7 @@ export default function WaveformControls() {
             </Row>
 
             <Row className='mt-4'>
-                <Col xs='4' className='gap-1 p-0'>
+                <Col xs='4' className='gap-1'>
                     <Button
                         variant={waveformRenderOptions.audioNormalization ? 'primary' : 'outline-danger'}
                         onClick={() => dispatch(toggleAudioNormalization())}
@@ -57,7 +57,7 @@ export default function WaveformControls() {
                     </Button>
                 </Col>
 
-                <Col xs='8' className='gap-1 p-0'>
+                <Col xs='8' className='gap-1'>
                     <div className={waveformRenderOptions.audioNormalization ? 'fw-lighter' : ''}>
                         {waveformRenderOptions.audioNormalization ? 'Normalized' : 'Intensity'}
                     </div>
@@ -88,6 +88,14 @@ export default function WaveformControls() {
                         step='0.01'
                         onChange={event => dispatch(setBarGap(parseFloat(event.target.value)))}
                     />
+                </Col>
+            </Row>
+
+            <Row className='mt-4'>
+                <Col className='d-flex justify-content-end'>
+                    <Button onClick={() => dispatch(switchPage('exporter'))}>
+                        Export
+                    </Button>
                 </Col>
             </Row>
 
