@@ -28,7 +28,7 @@ export default function TrimmerControls() {
             </Row>
 
             <Row className='mt-1'>
-                <Col xs='4' className='d-flex justify-content-center align-items-center ps-0 pe-1'>
+                <Col xs='4' className='d-flex justify-content-center align-items-center pe-2'>
                     <Button
                         style={{ width: '100%' }}
                         variant='danger'
@@ -48,7 +48,7 @@ export default function TrimmerControls() {
                     </Button>
                 </Col>
 
-                <Col xs='4' className='d-flex justify-content-center align-items-center ps-1 pe-0'>
+                <Col xs='4' className='d-flex justify-content-center align-items-center ps-2'>
                     <Button
                         style={{ width: '100%' }}
                         variant='success'
@@ -59,8 +59,8 @@ export default function TrimmerControls() {
                 </Col>
             </Row>
 
-            <Row className='justify-content-start align-items-center p-0 mt-2'>
-                <Col xs='auto' className='p-0'>
+            <Row className='justify-content-start align-items-center mt-2'>
+                <Col xs='auto' className='py-0 pe-0'>
                     <InfoCircle size={15} />
                 </Col>
                 <Col xs='auto' className='fw-light ps-2'>

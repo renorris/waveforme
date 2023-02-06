@@ -94,7 +94,7 @@ export default function Uploader() {
                 >
                     <Row className='text-center mt-2'><h2>Design your Waveforme</h2></Row>
                     <Row className='text-center mt-2'><h5>Choose an audio or video file</h5></Row>
-                    <Row className='justify-content-center text-center'>
+                    <Row className='justify-content-center text-center px-2'>
                         <input
                             id='formFile'
                             className='form-control mt-3'
@@ -105,9 +105,9 @@ export default function Uploader() {
                             onChange={(event) => processFile(event.target.files!.item(0)!)}
                         />
                     </Row>
-                    <Row className='justify-content-start fw-lighter'>Supported files: .mp4, .mov, .mp3, .m4a, .ogg, .wav</Row>
+                    <Row className='justify-content-start fw-lighter px-2'>Supported files: .mp4, .mov, .mp3, .m4a, .ogg, .wav</Row>
                     <Row className='mt-3'>
-                        <Col className='d-flex justify-content-center align-items-center text-wrap fw-light p-0'>
+                        <Col className='d-flex justify-content-center align-items-center text-wrap fw-light'>
                             <InfoCircle height={'auto'} />
                             <Col className='ms-2'>
                                 For the best experience possible, a <span className='fw-semibold'>one minute</span> upload limit is enforced.&nbsp;
@@ -121,7 +121,7 @@ export default function Uploader() {
                         </Col>
                     </Row>
                     <Row className='mt-1'>
-                        <Col className='d-flex justify-content-center align-items-center text-wrap fw-light p-0'>
+                        <Col className='d-flex justify-content-center align-items-center text-wrap fw-light'>
                             <InfoCircle height={'auto'} />
                             <Col className='ms-2'>Shorter files produce a higher Waveforme resolution.</Col>
                         </Col>

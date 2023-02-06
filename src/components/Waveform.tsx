@@ -8,7 +8,7 @@ import { clamp } from './waveformUtil';
 import html2canvas from 'html2canvas';
 
 import { useAppSelector, useAppDispatch } from '../storeHooks';
-import { stop, setSelectedRegionStart, setSelectedRegionEnd, resetState, play, pause } from './waveformSlice';
+import { stop, setSelectedRegionStart, setSelectedRegionEnd, resetState, play, pause, WaveformState } from './waveformSlice';
 import { setLocalWaveformImageURL } from './designerSlice';
 import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { mp3UrlToAudioBuffer } from './designerUtil';
@@ -51,13 +51,14 @@ export default function Waveform() {
         container: HTMLDivElement,
 
         heightMultiplier: number,
+        mode: WaveformState['waveformRenderOptions']['mode'],
         barHeight: number,
         barWidth: number,
         barGap: number,
         normalization: boolean,
     ) => ({
         barHeight: barHeight,
-        barWidth: barWidth,
+        barWidth: mode === 'bar' ? barWidth : null,
         barGap: barGap,
         normalize: normalization,
         cursorWidth: 0,
@@ -127,6 +128,7 @@ export default function Waveform() {
             const params = generateWavesurferParams(
                 waveformContainerRef.current!,
                 waveformRenderOptions.heightMultiplier,
+                waveformRenderOptions.mode,
                 waveformRenderOptions.barHeight,
                 waveformRenderOptions.barWidth,
                 waveformRenderOptions.barGap,
@@ -164,6 +166,8 @@ export default function Waveform() {
             const deconstruct = async () => {
                 console.log('Saving an image of the waveform');
                 
+                wavesurfer.current!.seekTo(0);
+
                 const canvas = await html2canvas(waveformParentContainerRef.current!, {
                     backgroundColor: '#FFFFFF',
                 });
@@ -229,6 +233,7 @@ export default function Waveform() {
             const params = generateWavesurferParams(
                 waveformContainerRef.current!,
                 waveformRenderOptions.heightMultiplier,
+                waveformRenderOptions.mode,
                 waveformRenderOptions.barHeight,
                 waveformRenderOptions.barWidth,
                 waveformRenderOptions.barGap,

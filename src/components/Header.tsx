@@ -14,7 +14,7 @@ import logo from "../assets/logo.svg";
 
 function Header() {
     return (
-        <Navbar bg="grey" className="border-bottom px-0 mx-0 py-0 my-0">
+        <Navbar bg="grey" className="border-bottom px-0 mx-0 py-0 mt-0 mb-2">
             <Container fluid className="justify-content-start">
                 <Nav.Link as={Link} to="/">
                     <Navbar.Brand>

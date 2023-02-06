@@ -3,10 +3,11 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface WaveformState {
+export interface WaveformState {
     // Options requiring a wavesurfer "re-render" on change:
     waveformRenderOptions: {
         heightMultiplier: number,
+        mode: 'bar' | 'wave',
         barHeight: number,
         barWidth: number,
         barGap: number,
@@ -24,6 +25,7 @@ interface WaveformState {
 const initialState: WaveformState = {
     waveformRenderOptions: {
         heightMultiplier: 0.5,
+        mode: 'bar',
         barHeight: 1,
         barWidth: 1,
         barGap: 1,
@@ -49,14 +51,32 @@ export const waveformState = createSlice({
         setHeightMultiplier: (state, action: PayloadAction<number>) => {
             state.waveformRenderOptions.heightMultiplier = action.payload;
         },
+        setMode: (state, action: PayloadAction<WaveformState['waveformRenderOptions']['mode']>) => {
+            state.waveformRenderOptions.mode = action.payload;
+        },
+        swapMode: state => {
+            state.waveformRenderOptions.mode = state.waveformRenderOptions.mode === 'bar' ? 'wave' : 'bar';
+        },
         setBarHeight: (state, action: PayloadAction<number>) => {
             state.waveformRenderOptions.barHeight = action.payload;
+        },
+        incrementBarHeight: (state, action: PayloadAction<number>) => {
+            if (action.payload < 0 && state.waveformRenderOptions.barHeight <= 0) return;
+            state.waveformRenderOptions.barHeight += action.payload;
         },
         setBarWidth: (state, action: PayloadAction<number>) => {
             state.waveformRenderOptions.barWidth = action.payload;
         },
+        incrementBarWidth: (state, action: PayloadAction<number>) => {
+            if (action.payload < 0 && state.waveformRenderOptions.barWidth <= 1) return;
+            state.waveformRenderOptions.barWidth += action.payload;
+        },
         setBarGap: (state, action: PayloadAction<number>) => {
             state.waveformRenderOptions.barGap = action.payload;
+        },
+        incrementBarGap: (state, action: PayloadAction<number>) => {
+            if (action.payload < 0 && state.waveformRenderOptions.barGap <= 1) return;
+            state.waveformRenderOptions.barGap += action.payload;
         },
         setAudioNormalization: (state, action: PayloadAction<boolean>) => {
             state.waveformRenderOptions.audioNormalization = action.payload;
@@ -114,10 +134,15 @@ export const waveformState = createSlice({
 
 export const { 
     resetState, 
-    setHeightMultiplier, 
+    setHeightMultiplier,
+    setMode,
+    swapMode,
     setBarHeight, 
-    setBarWidth, 
+    incrementBarHeight,
+    setBarWidth,
+    incrementBarWidth,
     setBarGap, 
+    incrementBarGap,
     setAudioNormalization,
     toggleAudioNormalization,
     play,
