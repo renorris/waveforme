@@ -87,7 +87,7 @@ export default function Uploader() {
 
     return (
         <>
-            {phase === 'idle' &&
+            { phase === 'idle' &&
                 <Container
                     className='justify-content-center align-items-center'
                     style={{ maxWidth: '640px' }}
@@ -110,12 +110,12 @@ export default function Uploader() {
                         <Col className='d-flex justify-content-center align-items-center text-wrap fw-light'>
                             <InfoCircle height={'auto'} />
                             <Col className='ms-2'>
-                                For the best experience possible, a <span className='fw-semibold'>one minute</span> upload limit is enforced.&nbsp;
+                                For the best experience possible, a <span className='fw-semibold'>five minute</span> upload limit is enforced.&nbsp;
                                 <span
                                     style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
                                 //onClick={() => setShowAudioTrimHelp(true)}
                                 >
-                                    Need help?
+                                    Having trouble?
                                 </span>
                             </Col>
                         </Col>
@@ -152,7 +152,7 @@ export default function Uploader() {
                 </Container>
             }
 
-            {phase === 'processing' &&
+            { phase === 'processing' &&
                 <Container>
                     <Row className='justify-content-center align-items-center text-center mt-2'>
                         <h3>Extracting Audio...</h3>
@@ -166,7 +166,7 @@ export default function Uploader() {
                 </Container>
             }
 
-            {phase === 'error' &&
+            { phase === 'error' &&
                 <h1>Uploader error!</h1>
             }
         </>

@@ -55,7 +55,6 @@ export const designerSlice = createSlice({
             // Set new URL
             state.localWaveformImageURL = action.payload;
         },
-        
     }
 });
 

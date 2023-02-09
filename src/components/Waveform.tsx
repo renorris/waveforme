@@ -8,7 +8,7 @@ import { clamp } from './waveformUtil';
 import html2canvas from 'html2canvas';
 
 import { useAppSelector, useAppDispatch } from '../storeHooks';
-import { stop, setSelectedRegionStart, setSelectedRegionEnd, resetState, play, pause, WaveformState } from './waveformSlice';
+import { stop, setSelectedRegionStart, setSelectedRegionEnd, resetState, play, pause, WaveformState, setActiveTrimmedRegionDuration } from './waveformSlice';
 import { setLocalWaveformImageURL } from './designerSlice';
 import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { mp3UrlToAudioBuffer } from './designerUtil';
@@ -82,6 +82,8 @@ export default function Waveform() {
 
         // Load audio
         wavesurfer.current!.loadDecodedBuffer(audioBuf);
+
+        //dispatch(setActiveTrimmedRegionDurationSeconds(audioBuf.duration));
     }
 
     // Wavesurfer reset parameters helper
@@ -211,6 +213,7 @@ export default function Waveform() {
             if (!localOriginalMP3URL) return;
 
             const audioBuf = await mp3UrlToAudioBuffer(localOriginalMP3URL, activeTrimmedRegion[0], activeTrimmedRegion[1]);
+            dispatch(setActiveTrimmedRegionDuration(audioBuf.duration));
             drawAudioBufferOnWavesurfer(audioBuf);
         }
 

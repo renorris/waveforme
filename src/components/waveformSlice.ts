@@ -20,6 +20,7 @@ export interface WaveformState {
 
     activeTrimmedRegion: [number, number],
     activeTrimmedRegionHistory: [[number, number]],
+    activeTrimmedRegionDuration: number,
 }
 
 const initialState: WaveformState = {
@@ -36,6 +37,7 @@ const initialState: WaveformState = {
 
     activeTrimmedRegion: [0, 1],
     activeTrimmedRegionHistory: [[0, 1]],
+    activeTrimmedRegionDuration: 0,
 }
 
 export const waveformState = createSlice({
@@ -109,6 +111,10 @@ export const waveformState = createSlice({
             state.selectedRegion = [state.selectedRegion[0], action.payload];
         },
 
+        setActiveTrimmedRegionDuration: (state, action: PayloadAction<number>) => {
+            state.activeTrimmedRegionDuration = action.payload;
+        },  
+
         // - Transfers selected region to actively trimmed region.
         // - Compensates for "drift" from previous trims. Uses the existing
         //   actively trimmed region as a "frame" to reference the next
@@ -152,6 +158,7 @@ export const {
     stop,
     setSelectedRegionStart,
     setSelectedRegionEnd,
+    setActiveTrimmedRegionDuration,
     transferSelectedRegionToTrimmedRegion,
     revertTrimmedSelectionToOriginal,
 } = waveformState.actions;

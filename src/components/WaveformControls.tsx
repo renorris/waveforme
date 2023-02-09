@@ -159,7 +159,7 @@ export default function WaveformControls() {
                                 <Button variant={waveformRenderOptions.audioNormalization ? 'success' : 'outline-dark'}
                                     onClick={() => dispatch(toggleAudioNormalization())}
                                 >
-                                    {waveformRenderOptions.audioNormalization ? <VolumeUp size={25} /> : <VolumeOff size={25} />}
+                                    {waveformRenderOptions.audioNormalization ? <VolumeUp size={25} /> : 'Auto'}
                                 </Button>
                                 <Button variant='outline-dark'
                                     onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)))}
@@ -227,7 +227,7 @@ export default function WaveformControls() {
                                 <Button variant={waveformRenderOptions.audioNormalization ? 'success' : 'outline-dark'}
                                     onClick={() => dispatch(toggleAudioNormalization())}
                                 >
-                                    {waveformRenderOptions.audioNormalization ? <VolumeUp size={25} /> : <VolumeOff size={25} />}
+                                    {waveformRenderOptions.audioNormalization ? <VolumeUp size={25} /> : 'Auto'}
                                 </Button>
                                 <Button variant='outline-dark'
                                     onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)))}
