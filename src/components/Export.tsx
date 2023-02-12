@@ -38,7 +38,14 @@ export default function Export() {
 
 
     const saveWaveformImageURL = () => {
-        FileSaver.saveAs(localWaveformImageURLRef.current!, 'waveforme-export.jpg');
+        const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+            "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+        ];
+        const date = new Date(Date.now());
+
+        const filename = `waveforme_export_${date.getDate().toString().padStart(2, '0')}${monthNames[date.getMonth()]}${date.getFullYear().toString()}-${date.getUTCHours().toString().padStart(2, '0')}${date.getUTCMinutes().toString().padStart(2, '0')}`;
+
+        FileSaver.saveAs(localWaveformImageURLRef.current!, filename);
     }
 
     const saveTrimmedAudioAsMP3 = async () => {

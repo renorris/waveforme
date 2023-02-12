@@ -1,7 +1,7 @@
 // Waveforme Waveform.tsx
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
-import React, { useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
 import { clamp } from './waveformUtil';
@@ -14,6 +14,7 @@ import { setLocalWaveformImageURL } from './designerSlice';
 import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { mp3UrlToAudioBuffer } from './designerUtil';
 import { PieceName, pieces, percentify } from '../jewelry';
+
 
 
 export default function Waveform() {
@@ -50,6 +51,14 @@ export default function Waveform() {
     const wavesurferReady = useRef<boolean>(false);
 
 
+    // Track the status of the piece image loading
+    const pieceImageLoaded = useRef<boolean>(false);
+
+    // Set pieceImageLoaded back to false whenever selectedPiece changes
+    useMemo(() => {
+        pieceImageLoaded.current = false;
+    }, [selectedPiece]);
+
 
     // Param generator helper
     const generateWavesurferParams = (
@@ -77,7 +86,7 @@ export default function Waveform() {
         waveColor: '#000000',
         barMinHeight: 3,
         height: (waveformParentContainerRef.current!.clientHeight),
-        //pixelRatio: 30,
+        pixelRatio: pieces[selectedPiece].waveformTargetResolution.width / waveformParentContainerRef.current!.clientWidth,
     });
 
     // Wavesurfer audio buffer drawer helper
@@ -130,6 +139,10 @@ export default function Waveform() {
     useLayoutEffect(() => {
         const construct = async () => {
             console.log('Constructing wavesurfer');
+
+            console.log('Waiting for piece image to download');
+            while (!pieceImageLoaded.current) await new Promise(r => setTimeout(r, 50));
+
             const WaveSurfer = (await import('wavesurfer.js')).default;
             const RegionsPlugin = (await import('wavesurfer.js/src/plugin/regions')).default;
 
@@ -179,13 +192,16 @@ export default function Waveform() {
 
                 wavesurfer.current!.seekTo(0);
 
-                const canvas = await html2canvas(waveformParentContainerRef.current!, {
-                    backgroundColor: '#FFFFFF',
-                });
-                const imageBlob = await new Promise<Blob | null>(resolve => {
-                    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 1);
-                });
-                if (!imageBlob) throw Error('Unable to get image from canvas');
+                // const canvas = await html2canvas(wavesurfer.current!.drawer.canvases[0].wave, {
+                //     backgroundColor: '#FFFFFF',
+                // });
+                // const imageBlob = await new Promise<Blob | null>(resolve => {
+                //     canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 1);
+                // });
+                // if (!imageBlob) throw Error('Unable to get image from canvas');
+
+                const blobs = await wavesurfer.current!.exportImage('image/png', 1, 'blob') as Blob[];
+                const imageBlob = blobs[0];
 
                 const url = window.URL.createObjectURL(imageBlob);
                 dispatch(setLocalWaveformImageURL(url));
@@ -501,20 +517,20 @@ export default function Waveform() {
                         }
                     }>
                         <img 
-                            src={`${config.app.PUBLIC_URL}/${pieces[selectedPiece].imgPath}`} 
-                            style={{ position: 'relative', width: '100%' }}
-
+                            src={`${config.app.PUBLIC_URL}${pieces[selectedPiece].imgPath}`} 
+                            style={{ width: '100%' }}
+                            onLoad={() => pieceImageLoaded.current = true}
                         />
                         <div
                             id='waveformParent'
                             style={
                                 { 
                                     position: 'absolute', 
-                                    left: `${pieces[selectedPiece].waveformLeftOffset}%`, 
-                                    top: `${pieces[selectedPiece].waveformTopOffset}%`,
-                                    width: `${pieces[selectedPiece].waveformWidth * 2}%`,
-                                    height: `${pieces[selectedPiece].waveformHeight * 2}%`,
-                                    transform: 'scale(0.5)',
+                                    left: percentify(pieces[selectedPiece].waveformLeftOffset),
+                                    top: percentify(pieces[selectedPiece].waveformTopOffset),
+                                    width: percentify(pieces[selectedPiece].waveformRelativeWidth),
+                                    height: percentify(pieces[selectedPiece].waveformRelativeHeight),
+                                    transform: `scale(1)`,
                                     transformOrigin: 'top left',
                                 }
                             }

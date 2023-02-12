@@ -9,8 +9,13 @@ interface PieceInfo {
     // All values are in percent: relative to the image in imgPath
     waveformLeftOffset: number,
     waveformTopOffset: number,
-    waveformWidth: number,
-    waveformHeight: number,
+    waveformRelativeWidth: number,
+    waveformRelativeHeight: number,
+
+    waveformTargetResolution: {
+        width: number,
+        height: number,
+    },
 }
 
 type PieceName = 'dogTag';
@@ -18,15 +23,19 @@ type PieceName = 'dogTag';
 const pieces: Record<PieceName, PieceInfo> = {
     'dogTag': {
         imgPath: '/jewelry/dog_tag-1024-469.jpg',
-        waveformLeftOffset: 45.779,
-        waveformTopOffset: 15.444,
-        waveformWidth: 47.619,
-        waveformHeight: 69.413,
+        waveformLeftOffset: 0.45779,
+        waveformTopOffset: 0.15444,
+        waveformRelativeWidth: 0.47619,
+        waveformRelativeHeight: 0.69413,
+        waveformTargetResolution: {
+            width: 1200,
+            height: 800,
+        },
     },
 }
 
-const percentify = (num: number): string => {
-    return `${num}%`;
+const percentify = (decimal: number): string => {
+    return `${decimal * 100}%`;
 }
 
 export { pieces, percentify, PieceName, PieceInfo };

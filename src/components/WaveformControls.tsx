@@ -110,7 +110,7 @@ export default function WaveformControls() {
 
                         <Dropdown.Menu variant='outline-dark'>
                             <Dropdown.Item active={waveformRenderOptions.mode === 'bar'} onClick={() => dispatch(setMode('bar'))}><BarChart />&nbsp;Bars</Dropdown.Item>
-                            <Dropdown.Item active={waveformRenderOptions.mode === 'wave'} onClick={() => dispatch(setMode('wave'))}><Flower1 />&nbsp;Organic</Dropdown.Item>
+                            <Dropdown.Item active={waveformRenderOptions.mode === 'wave'} onClick={() => dispatch(setMode('wave'))}><Flower1 />&nbsp;Natural</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                 </Col>

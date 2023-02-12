@@ -103,7 +103,7 @@ export default function Uploader() {
                             className='form-control mt-3'
                             //style={{ maxWidth: '384px' }}
                             type='file'
-                            accept='audio/*,video/*'
+                            accept='.mp4, .mov, .mp3, .m4a, .ogg, .wav'
                             onClick={touchLibraries}
                             onChange={(event) => processFile(event.target.files!.item(0)!)}
                         />
