@@ -15,8 +15,8 @@ export const uploaderState = createSlice({
     name: 'uploader',
     initialState,
     reducers: {
-        resetState: (state) => {
-            state = initialState;
+        resetState: state => {
+            state.phase = initialState.phase;
         },
         setPhase: (state, action: PayloadAction<UploaderState['phase']>) => {
             state.phase = action.payload;

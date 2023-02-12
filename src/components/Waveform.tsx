@@ -2,20 +2,24 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 import React, { useRef, useEffect, useLayoutEffect } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
 import { clamp } from './waveformUtil';
 import html2canvas from 'html2canvas';
 
+import useConfig from './useConfig';
 import { useAppSelector, useAppDispatch } from '../storeHooks';
 import { stop, setSelectedRegionStart, setSelectedRegionEnd, resetState, play, pause, WaveformState, setActiveTrimmedRegionDuration } from './waveformSlice';
 import { setLocalWaveformImageURL } from './designerSlice';
 import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { mp3UrlToAudioBuffer } from './designerUtil';
-
+import { PieceName, pieces, percentify } from '../jewelry';
 
 
 export default function Waveform() {
+
+    // project config
+    const config = useConfig();
 
     // Config redux
     const dispatch = useAppDispatch();
@@ -24,6 +28,7 @@ export default function Waveform() {
     const waveformRenderOptions = useAppSelector(state => state.waveform.waveformRenderOptions);
     const playbackDirective = useAppSelector(state => state.waveform.playbackDirective);
     const activeTrimmedRegion = useAppSelector(state => state.waveform.activeTrimmedRegion);
+    const selectedPiece = useAppSelector(state => state.waveform.selectedPiece);
 
 
     // Declare selected region selector & a setter to store the state in an arbitrary ref 
@@ -58,8 +63,8 @@ export default function Waveform() {
         normalization: boolean,
     ) => ({
         barHeight: barHeight,
-        barWidth: mode === 'bar' ? barWidth : null,
-        barGap: barGap,
+        barWidth: mode === 'bar' ? Math.round(barWidth) : null,
+        barGap: Math.round(barGap),
         normalize: normalization,
         cursorWidth: 0,
         container: container,
@@ -71,7 +76,8 @@ export default function Waveform() {
         progressColor: '#0D5BFF',
         waveColor: '#000000',
         barMinHeight: 3,
-        height: (waveformParentContainerRef.current!.offsetWidth * heightMultiplier),
+        height: (waveformParentContainerRef.current!.clientHeight),
+        //pixelRatio: 30,
     });
 
     // Wavesurfer audio buffer drawer helper
@@ -157,6 +163,9 @@ export default function Waveform() {
             // Draw an empty waveform as a temporary placeholder
             newWavesurfer.empty();
 
+            // Null out the current waveform image to reset it
+            dispatch(setLocalWaveformImageURL(null));
+
             wavesurfer.current = newWavesurfer;
         }
 
@@ -167,17 +176,17 @@ export default function Waveform() {
 
             const deconstruct = async () => {
                 console.log('Saving an image of the waveform');
-                
+
                 wavesurfer.current!.seekTo(0);
 
                 const canvas = await html2canvas(waveformParentContainerRef.current!, {
                     backgroundColor: '#FFFFFF',
                 });
                 const imageBlob = await new Promise<Blob | null>(resolve => {
-                    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8)
+                    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 1);
                 });
                 if (!imageBlob) throw Error('Unable to get image from canvas');
-                
+
                 const url = window.URL.createObjectURL(imageBlob);
                 dispatch(setLocalWaveformImageURL(url));
 
@@ -432,7 +441,10 @@ export default function Waveform() {
     // Helper to generate normalized 0..1 position relative to waveform container
     // based on provided clientX value
     const waveformPosFromClientX = (clientX: number) => {
-        return clamp((clientX - waveformParentContainerRef.current!.offsetLeft) / waveformParentContainerRef.current!.clientWidth, 0, 1);
+        const rect = waveformParentContainerRef.current!.getBoundingClientRect();
+        const offsetLeft = rect.left;
+        const clientWidth = rect.right - rect.left;
+        return clamp((clientX - offsetLeft) / clientWidth, 0, 1);
     }
 
     // Touch/mouse dragging handlers
@@ -480,14 +492,45 @@ export default function Waveform() {
         >
             <Row className='justify-content-center align-items-center'>
                 <Col>
-                    <div
-                        id='waveformParent'
-                        ref={waveformParentContainerRef}
-                    >
-                        <div
-                            id='waveform'
-                            ref={waveformContainerRef}
+                    <div style={
+                        { 
+                            position: 'relative', 
+                            display: 'inline-block', 
+                            verticalAlign: 'top',
+                            touchAction: 'none'
+                        }
+                    }>
+                        <img 
+                            src={`${config.app.PUBLIC_URL}/${pieces[selectedPiece].imgPath}`} 
+                            style={{ position: 'relative', width: '100%' }}
+
                         />
+                        <div
+                            id='waveformParent'
+                            style={
+                                { 
+                                    position: 'absolute', 
+                                    left: `${pieces[selectedPiece].waveformLeftOffset}%`, 
+                                    top: `${pieces[selectedPiece].waveformTopOffset}%`,
+                                    width: `${pieces[selectedPiece].waveformWidth * 2}%`,
+                                    height: `${pieces[selectedPiece].waveformHeight * 2}%`,
+                                    transform: 'scale(0.5)',
+                                    transformOrigin: 'top left',
+                                }
+                            }
+                            ref={waveformParentContainerRef}
+                        >
+                            {/* {!wavesurferReady.current &&
+                            <Spinner
+                                animation='border'
+                                style={{ position: 'absolute', left: '50%', top: '50%' }}
+                            />
+                        } */}
+                            <div
+                                id='waveform'
+                                ref={waveformContainerRef}
+                            />
+                        </div>
                     </div>
                 </Col>
             </Row>

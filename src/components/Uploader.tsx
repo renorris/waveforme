@@ -1,7 +1,7 @@
 // Waveforme Uploader.tsx
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Button, Col, Container, Modal, Row, Stack } from 'react-bootstrap';
 import { InfoCircle } from 'react-bootstrap-icons';
@@ -15,10 +15,13 @@ export default function Uploader() {
     const dispatch = useAppDispatch();
     const phase = useAppSelector(state => state.uploader.phase);
 
+    // Hold local "having trouble?" modal visibility state
+    const [showAudioTrimHelp, setShowAudioTrimHelp] = useState<boolean>(false);
+
     // Reset state on unmount
     useEffect(() => {
         return () => {
-            dispatch(resetState);
+            dispatch(resetState());
         }
     }, []);
 
@@ -113,7 +116,7 @@ export default function Uploader() {
                                 For the best experience possible, a <span className='fw-semibold'>five minute</span> upload limit is enforced.&nbsp;
                                 <span
                                     style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
-                                //onClick={() => setShowAudioTrimHelp(true)}
+                                    onClick={() => setShowAudioTrimHelp(true)}
                                 >
                                     Having trouble?
                                 </span>
@@ -128,8 +131,8 @@ export default function Uploader() {
                     </Row>
 
                     <Modal
-                        //show={showAudioTrimHelp}
-                        //onHide={() => setShowAudioTrimHelp(false)}
+                        show={showAudioTrimHelp}
+                        onHide={() => setShowAudioTrimHelp(false)}
                         aria-labelledby="contained-modal-title-vcenter"
                         centered
                     >
@@ -143,7 +146,7 @@ export default function Uploader() {
                         </Modal.Body>
                         <Modal.Footer>
                             <Button variant='success'
-                            //onClick={() => setShowAudioTrimHelp(false)}
+                            onClick={() => setShowAudioTrimHelp(false)}
                             >
                                 Okay
                             </Button>

@@ -6,8 +6,8 @@ import { Container, Row, Col, Modal, Button, Stack } from 'react-bootstrap';
 import { ArrowReturnLeft, Check, Check2Square, ExclamationCircle, InfoCircle, PlayFill, StopFill } from 'react-bootstrap-icons';
 
 import { useAppSelector, useAppDispatch } from '../storeHooks';
-import waveformSlice, { playPause, transferSelectedRegionToTrimmedRegion } from './waveformSlice';
-import designerSlice, { switchPage } from './designerSlice';
+import { playPause, transferSelectedRegionToTrimmedRegion } from './waveformSlice';
+import { switchPage } from './designerSlice';
 
 export default function TrimmerControls() {
 
@@ -23,7 +23,6 @@ export default function TrimmerControls() {
     }, [selectedRegion, activeTrimmedRegionDuration]);
 
     const handleTrimButtonClick = () => {
-
         dispatch(transferSelectedRegionToTrimmedRegion());
         dispatch(switchPage('main'));
     }
@@ -90,5 +89,4 @@ export default function TrimmerControls() {
             </Row>
         </Container>
     );
-
 }

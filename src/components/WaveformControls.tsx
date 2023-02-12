@@ -66,6 +66,7 @@ export default function WaveformControls() {
     // Repeat callback helper
     const repeaterRef = useRef<NodeJS.Timer>();
     const startHoldDown = (callback: () => any) => {
+        callback();
         clearInterval(repeaterRef.current);
         repeaterRef.current = setInterval(callback, 50);
     }
@@ -127,16 +128,16 @@ export default function WaveformControls() {
                         <Col xs='3' className='d-flex justify-content-center p-0 pe-2'>
                             <ButtonGroup style={{ width: '100%' }} vertical>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarWidth(0.05)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarWidth(0.05)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarWidth(0.2)))}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarWidth(0.2)))}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                 >
                                     <Plus size={25} />
                                 </Button>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarWidth(-0.05)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarWidth(-0.05)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarWidth(-0.2)))}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarWidth(-0.2)))}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                 >
@@ -176,16 +177,16 @@ export default function WaveformControls() {
                         <Col xs='3' className='d-flex justify-content-center p-0 ps-2'>
                             <ButtonGroup style={{ width: '100%' }} vertical>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarGap(0.05)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarGap(0.05)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarGap(0.2)))}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarGap(0.2)))}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                 >
                                     <Plus size={25} />
                                 </Button>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarGap(-0.05)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarGap(-0.05)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarGap(-0.2)))}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarGap(-0.2)))}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                 >
@@ -264,30 +265,37 @@ export default function WaveformControls() {
 
             <Modal
                 show={showRevertModal}
+                size='lg'
                 onHide={() => setShowRevertModal(false)}
                 aria-labelledby="contained-modal-title-vcenter"
                 centered
             >
                 <Modal.Header closeButton>
-                    <Modal.Title className='text-center'>Revert Audio</Modal.Title>
+                    <Modal.Title className='text-center'>Undo Changes</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Stack className='text-center'>
                         <div>Are you sure?</div>
-                        <div>This will revert your audio to its original state.</div>
+                        <div>This will revert your audio to a previous state.</div>
                     </Stack>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant='success' onClick={() => setShowRevertModal(false)}>
                         Cancel
                     </Button>
+                    <Button variant='warning' onClick={() => dispatch(switchPage('uploader'))}>
+                        Upload again
+                    </Button>
+                    <Button variant='warning' onClick={() => {}}>
+                        Undo once
+                    </Button>
                     <Button variant='warning' onClick={() => handleModalRevertButtonClick()}>
-                        Yes
+                        Revert to original
                     </Button>
                 </Modal.Footer>
             </Modal>
 
         </Container>
-    )
+    );
 
 }

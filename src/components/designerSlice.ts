@@ -24,7 +24,7 @@ export const designerSlice = createSlice({
             state.activePage = action.payload;
         },
 
-        setLocalOriginalMP3URL: (state, action: PayloadAction<string>) => {
+        setLocalOriginalMP3URL: (state, action: PayloadAction<string | null>) => {
             // Clean up existing URL if exists
             if (state.localOriginalMP3URL !== null) {
                 try {
@@ -40,7 +40,7 @@ export const designerSlice = createSlice({
             state.localOriginalMP3URL = action.payload;
         },
 
-        setLocalWaveformImageURL: (state, action: PayloadAction<string>) => {
+        setLocalWaveformImageURL: (state, action: PayloadAction<string | null>) => {
             // Clean up existing URL if exists
             if (state.localWaveformImageURL !== null) {
                 try {

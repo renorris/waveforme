@@ -3,6 +3,8 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+import { PieceName } from '../jewelry';
+
 export interface WaveformState {
     // Options requiring a wavesurfer "re-render" on change:
     waveformRenderOptions: {
@@ -21,6 +23,8 @@ export interface WaveformState {
     activeTrimmedRegion: [number, number],
     activeTrimmedRegionHistory: [[number, number]],
     activeTrimmedRegionDuration: number,
+
+    selectedPiece: PieceName,
 }
 
 const initialState: WaveformState = {
@@ -38,6 +42,8 @@ const initialState: WaveformState = {
     activeTrimmedRegion: [0, 1],
     activeTrimmedRegionHistory: [[0, 1]],
     activeTrimmedRegionDuration: 0,
+
+    selectedPiece: 'dogTag',
 }
 
 export const waveformState = createSlice({
@@ -135,6 +141,10 @@ export const waveformState = createSlice({
             state.activeTrimmedRegionHistory = [originalRegion];
             state.activeTrimmedRegion = originalRegion;
         },
+
+        setSelectedPiece: (state, action: PayloadAction<PieceName>) => {
+            state.selectedPiece = action.payload;
+        },
     }
 });
 
@@ -161,5 +171,7 @@ export const {
     setActiveTrimmedRegionDuration,
     transferSelectedRegionToTrimmedRegion,
     revertTrimmedSelectionToOriginal,
+    setSelectedPiece,
 } = waveformState.actions;
+
 export default waveformState.reducer;
