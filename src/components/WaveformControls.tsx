@@ -75,7 +75,7 @@ export default function WaveformControls() {
     }
 
 
-    const selectPieceHandler = (name: PieceName) => {
+    const selectPieceHandler = (name: PieceName | null) => {
         dispatch(setSelectedPiece(name));
         dispatch(disableJewelrySelector());
     }
@@ -97,7 +97,7 @@ export default function WaveformControls() {
     return (
         <Container style={{ maxWidth: '640px' }}>
 
-            <Row className='justify-content-center align-items-center mt-2'>
+            <Row className='justify-content-center align-items-center mt-4'>
                 <Col xs='3' className='p-0' />
 
                 <Col xs='4' className='px-2'>
@@ -293,11 +293,20 @@ export default function WaveformControls() {
                     <Modal.Title className='text-center'>Edit Changes</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Stack className='text-center'>
-                        <div>Are you sure?</div>
-                        <div>This will revert your audio to a previous state.</div>
-                    </Stack>
-
+                    <Row className='mt-3'>
+                        <Col xs='6' className='d-grid text-center'>
+                            <Button variant='outline-dark' onClick={() => { }}>
+                                <div>Undo Last Trim</div>
+                                <div><ArrowCounterclockwise /></div>
+                            </Button>
+                        </Col>
+                        <Col xs='6' className='d-grid text-center'>
+                            <Button variant='outline-dark' onClick={() => handleModalRevertButtonClick()}>
+                                <div>Reset Audio</div>
+                                <div><ArrowCounterclockwise /><ArrowCounterclockwise /></div>
+                            </Button>
+                        </Col>
+                    </Row>
                     <Row className='mt-3'>
                         <Col xs='6' className='d-grid text-center'>
                             <Button variant='outline-dark' onClick={() => dispatch(switchPage('uploader'))}>
@@ -306,25 +315,11 @@ export default function WaveformControls() {
                             </Button>
                         </Col>
                         <Col xs='6' className='d-grid text-center'>
-                            <Button variant='outline-dark' onClick={() => handleModalRevertButtonClick()}>
-                                <div>Revert to Original</div>
-                                <div><ArrowCounterclockwise /><ArrowCounterclockwise /></div>
-                            </Button>
-                        </Col>
-                    </Row>
-                    <Row className='mt-3'>
-                        <Col xs='6' className='d-grid text-center'>
-                            <Button variant='outline-dark' onClick={() => { }}>
-                                <div>Undo Once</div>
-                                <div><ArrowCounterclockwise /></div>
-                            </Button>
-                        </Col>
-                        <Col xs='6' className='d-grid text-center'>
                             <Button variant='outline-dark' onClick={() => {
                                 setShowRevertModal(false);
                                 dispatch(enableJewelrySelector());
                             }}>
-                                <div>Change Piece</div>
+                                <div>Select New Piece</div>
                                 <div><XDiamondFill /></div>
                             </Button>
                         </Col>
@@ -350,19 +345,29 @@ export default function WaveformControls() {
                     <Modal.Title className='text-center'>Select a Jewelry Piece</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {Object.entries(pieces).map(([name, pieceInfo]) => (
-                        <Row className='justify-content-center mt-3'>
-                            <Col className='text-center' onClick={() => selectPieceHandler(name as PieceName)}>
-                                <div className='mb-1'>{pieceInfo.prettyName}</div>
-                                <div>
+                    <Row className='mb-3'>
+                        {Object.entries(pieces).map(([name, pieceInfo]) => (
+                            <Col xs='6' sm='4' className='mb-3' onClick={() => selectPieceHandler(name as PieceName)} key={name}>
+                                <div className='text-start fw-semibold mb-2'>{pieceInfo.prettyName}</div>
+                                <div className='text-center shadow-sm p-2 rounded'>
                                     <img
                                         src={`${config.app.PUBLIC_URL}${pieceInfo.imgPreviewPath}`}
-                                        style={{ width: '100%' }}
+                                        style={{ width: '80%' }}
                                     />
                                 </div>
                             </Col>
-                        </Row>
-                    ))}
+                        ))}
+
+                        <Col xs='6' sm='4' onClick={() => selectPieceHandler(null)}>
+                            <div className='text-start fw-semibold mb-2'>Blank 2:1 Canvas</div>
+                            <div className='text-center shadow-sm p-2 rounded'>
+                                <img
+                                    src={`${config.app.PUBLIC_URL}/jewelry/blank_2_1_preview.jpg`}
+                                    style={{ width: '80%' }}
+                                />
+                            </div>
+                        </Col>
+                    </Row>
                 </Modal.Body>
             </Modal>
 

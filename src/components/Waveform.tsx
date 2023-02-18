@@ -129,6 +129,7 @@ export default function Waveform() {
 
         // Kill image
         pieceImgRef.current!.src = '';
+        pieceImgRef.current!.style.display = 'none';
         loadedPiece.current = null;
 
         // Set waveform parent container back to normal
@@ -137,6 +138,7 @@ export default function Waveform() {
         waveformParentContainerRef.current!.style.top = '0';
         waveformParentContainerRef.current!.style.width = '100%';
         waveformParentContainerRef.current!.style.height = '100%';
+        waveformParentContainerRef.current!.style.transform = 'scale(1)';
 
         // Wait for the dom to update
         await delayUntilNextAnimationFrame();
@@ -165,6 +167,7 @@ export default function Waveform() {
 
         // Set the src
         pieceImgRef.current!.src = `${config.app.PUBLIC_URL}${pieces[selectedPiece!].imgPath}`;
+        pieceImgRef.current!.style.display = 'initial';
 
         // Wait for onLoad
         await waitForPieceImageLoad();
@@ -175,7 +178,7 @@ export default function Waveform() {
         waveformParentContainerRef.current!.style.top = percentify(pieces[selectedPiece!].waveformTopOffset);
         waveformParentContainerRef.current!.style.width = percentify(pieces[selectedPiece!].waveformRelativeWidth);
         waveformParentContainerRef.current!.style.height = percentify(pieces[selectedPiece!].waveformRelativeHeight);
-        waveformParentContainerRef.current!.style.transform = 'scale(1)';
+        waveformParentContainerRef.current!.style.transform = `rotate(${pieces[selectedPiece!].rotationDeg}deg)`;
         waveformParentContainerRef.current!.style.transformOrigin = 'top left';
 
         // Wait for the dom to update
@@ -643,7 +646,7 @@ export default function Waveform() {
             fluid
             style={{ maxWidth: '640px', width: '100%' }}
         >
-            <Row className='justify-content-center align-items-center'>
+            <Row className='justify-content-center align-items-center shadow bg-white p-2 m-2 rounded'>
                 <Col>
                     <div
                         style={{

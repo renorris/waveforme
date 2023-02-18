@@ -88,7 +88,7 @@ export default function Export() {
     return (
         <Container style={{ maxWidth: '512px' }}>
             <Row className='mt-4'>
-                <Col xs='9' className='d-flex justify-content-center align-items-center'>
+                <Col xs='9' className='d-flex justify-content-center align-items-center shadow p-2 bg-white rounded'>
                     <img
                         style={{ width: '95%' }}
                         src={localWaveformImageURL as string}

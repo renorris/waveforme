@@ -145,7 +145,7 @@ export const waveformState = createSlice({
             state.activeTrimmedRegion = originalRegion;
         },
 
-        setSelectedPiece: (state, action: PayloadAction<WaveformState['selectedPiece']>) => {
+        setSelectedPiece: (state, action: PayloadAction<WaveformState['selectedPiece'] | null>) => {
             state.selectedPiece = action.payload;
         },
     }

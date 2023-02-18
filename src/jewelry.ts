@@ -14,6 +14,7 @@ interface PieceInfo {
     waveformTopOffset: number,
     waveformRelativeWidth: number,
     waveformRelativeHeight: number,
+    rotationDeg: number,
 
     waveformTargetResolution: {
         width: number,
@@ -21,17 +22,18 @@ interface PieceInfo {
     },
 }
 
-type PieceName = 'dogTag' | 'keychain';
+type PieceName = 'dogTag' | 'keychain' | 'heart1' | 'heart2';
 
 const pieces: Record<PieceName, PieceInfo> = {
     'dogTag': {
         imgPath: '/jewelry/dog_tag-1024-469.jpg',
-        imgPreviewPath: '/jewelry/dog_tag-1024-469.jpg',
+        imgPreviewPath: '/jewelry/dog_tag_preview.jpg',
         prettyName: 'Dog Tag',
         waveformLeftOffset: 0.45779,
         waveformTopOffset: 0.15444,
         waveformRelativeWidth: 0.47619,
         waveformRelativeHeight: 0.69413,
+        rotationDeg: 0,
         waveformTargetResolution: {
             width: 1200,
             height: 800,
@@ -39,15 +41,44 @@ const pieces: Record<PieceName, PieceInfo> = {
     },
     'keychain': {
         imgPath: '/jewelry/keychain-2000-1000.jpg',
-        imgPreviewPath: '/jewelry/keychain-2000-1000.jpg',
+        imgPreviewPath: '/jewelry/keychain_preview.jpg',
         prettyName: 'Keychain',
         waveformLeftOffset: 0.5495,
         waveformTopOffset: 0.287,
         waveformRelativeWidth: 0.4245,
         waveformRelativeHeight: 0.426,
+        rotationDeg: 0,
         waveformTargetResolution: {
-            width: 1600,
-            height: 800,
+            width: 1280,
+            height: 640,
+        },
+    },
+    'heart1': {
+        imgPath: '/jewelry/heart.jpg',
+        imgPreviewPath: '/jewelry/heart1_preview.jpg',
+        prettyName: 'Heart - Variant One',
+        waveformLeftOffset: 0.677272,
+        waveformTopOffset: 0.067272,
+        waveformRelativeWidth: 0.375455,
+        waveformRelativeHeight: 0.375455,
+        rotationDeg: 53,
+        waveformTargetResolution: {
+            width: 1280,
+            height: 640,
+        },
+    },
+    'heart2': {
+        imgPath: '/jewelry/heart.jpg',
+        imgPreviewPath: '/jewelry/heart2_preview.jpg',
+        prettyName: 'Heart - Variant Two',
+        waveformLeftOffset: 0.524545,
+        waveformTopOffset: 0.745454,
+        waveformRelativeWidth: 0.375455,
+        waveformRelativeHeight: 0.375455,
+        rotationDeg: -53,
+        waveformTargetResolution: {
+            width: 1280,
+            height: 640,
         },
     },
 }
