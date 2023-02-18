@@ -116,6 +116,9 @@ export const waveformState = createSlice({
         setSelectedRegionEnd: (state, action: PayloadAction<number>) => {
             state.selectedRegion = [state.selectedRegion[0], action.payload];
         },
+        setSelectedRegion: (state, action: PayloadAction<WaveformState['selectedRegion']>) => {
+            state.selectedRegion = action.payload;
+        },
 
         setActiveTrimmedRegionDuration: (state, action: PayloadAction<number>) => {
             state.activeTrimmedRegionDuration = action.payload;
@@ -168,6 +171,7 @@ export const {
     stop,
     setSelectedRegionStart,
     setSelectedRegionEnd,
+    setSelectedRegion,
     setActiveTrimmedRegionDuration,
     transferSelectedRegionToTrimmedRegion,
     revertTrimmedSelectionToOriginal,

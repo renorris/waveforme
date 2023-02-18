@@ -5,12 +5,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface DesignerState {
     activePage: 'uploader' | 'main' | 'trimmer' | 'exporter',
+    shouldDisplayJewelrySelector: boolean,
     localOriginalMP3URL: string | null,
     localWaveformImageURL: string | null,
 }
 
 const initialState: DesignerState = {
     activePage: 'uploader',
+    shouldDisplayJewelrySelector: true,
     localOriginalMP3URL: null,
     localWaveformImageURL: null,
 }
@@ -55,6 +57,14 @@ export const designerSlice = createSlice({
             // Set new URL
             state.localWaveformImageURL = action.payload;
         },
+
+        disableJewelrySelector: state => {
+            state.shouldDisplayJewelrySelector = false;
+        },
+
+        enableJewelrySelector: state => {
+            state.shouldDisplayJewelrySelector = true;
+        },
     }
 });
 
@@ -62,6 +72,8 @@ export const {
     switchPage,
     setLocalOriginalMP3URL,
     setLocalWaveformImageURL,
+    enableJewelrySelector,
+    disableJewelrySelector,
 } = designerSlice.actions;
 
 export default designerSlice.reducer;

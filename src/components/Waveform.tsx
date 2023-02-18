@@ -4,16 +4,16 @@
 import React, { useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import { WaveSurferParams } from 'wavesurfer.js/types/params';
-import { clamp } from './waveformUtil';
 import html2canvas from 'html2canvas';
 
 import useConfig from './useConfig';
 import { useAppSelector, useAppDispatch } from '../storeHooks';
-import { stop, setSelectedRegionStart, setSelectedRegionEnd, resetState, play, pause, WaveformState, setActiveTrimmedRegionDuration } from './waveformSlice';
+import { stop, setSelectedRegionStart, setSelectedRegionEnd, setSelectedRegion, resetState, play, pause, WaveformState, setActiveTrimmedRegionDuration } from './waveformSlice';
 import { setLocalWaveformImageURL } from './designerSlice';
 import { RegionParams, RegionsPluginParams } from 'wavesurfer.js/src/plugin/regions';
 import { mp3UrlToAudioBuffer } from './designerUtil';
-import { PieceName, pieces, percentify } from '../jewelry';
+import { pieces, percentify } from '../jewelry';
+import { clamp } from './waveformUtil';
 
 
 
@@ -48,6 +48,7 @@ export default function Waveform() {
     // Define wavesurfer & assoc. container refs
     const waveformParentContainerRef = useRef<HTMLDivElement>(null);
     const waveformContainerRef = useRef<HTMLDivElement>(null);
+    const visualizerParentContainerRef = useRef<HTMLDivElement>(null);
     const wavesurfer = useRef<WaveSurfer>();
     // Track wavesurfer position to keep it synced on a re-render.
     const wavesurferPositionNormalized = useRef<number>(0);
@@ -104,7 +105,7 @@ export default function Waveform() {
     // Param generator for a waveform on top of a jewelry piece
     const generateWaveformAndJewelryParams = (container: HTMLDivElement, waveformRenderOptions: WaveformState['waveformRenderOptions'], selectedPiece: WaveformState['selectedPiece']) => {
         const p = pieces[selectedPiece!];
-        
+
         return generateWavesurferParams(
             container,
             waveformRenderOptions.heightMultiplier,
@@ -117,6 +118,76 @@ export default function Waveform() {
             container.parentElement!.clientWidth * (p.waveformTargetResolution.height / p.waveformTargetResolution.width),
             p.waveformTargetResolution.width / container.clientWidth,
         );
+    }
+
+
+    // Configure waveform visualizer for a waveform by itself without jewelry preview
+    const configureForWaveformByItself = async () => {
+        // Set opacity to zero to help with flickering, then delay until next frame
+        visualizerParentContainerRef.current!.style.opacity = '0';
+        await delayUntilNextAnimationFrame();
+
+        // Kill image
+        pieceImgRef.current!.src = '';
+        loadedPiece.current = null;
+
+        // Set waveform parent container back to normal
+        waveformParentContainerRef.current!.style.position = 'static';
+        waveformParentContainerRef.current!.style.left = '0';
+        waveformParentContainerRef.current!.style.top = '0';
+        waveformParentContainerRef.current!.style.width = '100%';
+        waveformParentContainerRef.current!.style.height = '100%';
+
+        // Wait for the dom to update
+        await delayUntilNextAnimationFrame();
+
+        const params = generateJustTheWaveformParams(waveformContainerRef.current!, waveformRenderOptions);
+        resetParametersOnWavesurfer(params);
+
+        // Opacity back to 1
+        visualizerParentContainerRef.current!.style.opacity = '1';
+
+        console.log('Done configuring for waveform by itself');
+    }
+
+
+    // Configure waveform visualizer for a waveform by overlayed over a piece of jewelry
+    const configureForWaveformWithJewelry = async () => {
+
+            // 1. Set image src
+            // 2. Wait for onLoad fire
+            // 3. Set waveform parent ref style
+            // 4. Reset params on wavesurfer
+
+        // Set opacity to zero to help with flickering, then delay until next frame
+        visualizerParentContainerRef.current!.style.opacity = '0';
+        await delayUntilNextAnimationFrame();
+
+        // Set the src
+        pieceImgRef.current!.src = `${config.app.PUBLIC_URL}${pieces[selectedPiece!].imgPath}`;
+
+        // Wait for onLoad
+        await waitForPieceImageLoad();
+
+        // Set waveform parent ref style based on the newly loaded image
+        waveformParentContainerRef.current!.style.position = 'absolute';
+        waveformParentContainerRef.current!.style.left = percentify(pieces[selectedPiece!].waveformLeftOffset);
+        waveformParentContainerRef.current!.style.top = percentify(pieces[selectedPiece!].waveformTopOffset);
+        waveformParentContainerRef.current!.style.width = percentify(pieces[selectedPiece!].waveformRelativeWidth);
+        waveformParentContainerRef.current!.style.height = percentify(pieces[selectedPiece!].waveformRelativeHeight);
+        waveformParentContainerRef.current!.style.transform = 'scale(1)';
+        waveformParentContainerRef.current!.style.transformOrigin = 'top left';
+
+        // Wait for the dom to update
+        await delayUntilNextAnimationFrame();
+
+        const params = generateWaveformAndJewelryParams(waveformContainerRef.current!, waveformRenderOptions, selectedPiece);
+        resetParametersOnWavesurfer(params);
+
+        // Opacity back to 1
+        visualizerParentContainerRef.current!.style.opacity = '1';
+
+        console.log('Done configuring for jewelry');
     }
 
 
@@ -146,7 +217,7 @@ export default function Waveform() {
         // Draw the buffer
         wavesurfer.current!.drawBuffer();
 
-        // Set progress synchronously once here to remove flickering, otherwise wavesurfer 
+        // Set progress synchronously here once to remove flickering, otherwise wavesurfer 
         // waits for an audioprocess event to update the position, which is enough to flicker
         // back to 0 for a few ms
         wavesurfer.current!.drawer.progress(wavesurfer.current!.backend.getPlayedPercents());
@@ -184,7 +255,7 @@ export default function Waveform() {
 
 
     // Wavesurfer constructor/deconstructor
-    useLayoutEffect(() => {
+    useEffect(() => {
         const construct = async () => {
             console.log('Constructing wavesurfer');
 
@@ -293,6 +364,8 @@ export default function Waveform() {
             // Wavesurfer must be constructed before we run anything against it here.
             //console.log('Render options effect waiting for wavesurfer defined');
             await waitForWavesurferDefined();
+            await waitForWavesurferAudioLoaded();
+
             //console.log('Render options effect continuing...');
 
             let params: WaveSurferParams;
@@ -318,61 +391,24 @@ export default function Waveform() {
     useEffect(() => {
         const run = async () => {
             await waitForWavesurferDefined();
+            await waitForWavesurferAudioLoaded();
 
-            if (selectedPiece === loadedPiece.current) return;
+            if (selectedPiece === loadedPiece.current) {
+                return;
+            }
 
             // If the newly selected piece is null, just render the waveform by itself
             if (selectedPiece === null) {
-                // Kill image
-                pieceImgRef.current!.src = '';
-                loadedPiece.current = null;
-
-                // Set waveform parent container back to normal
-                waveformParentContainerRef.current!.style.position = 'static';
-                waveformParentContainerRef.current!.style.left = '0';
-                waveformParentContainerRef.current!.style.top = '0';
-                waveformParentContainerRef.current!.style.width = '100%';
-                waveformParentContainerRef.current!.style.height = '100%';
-
-                // Wait for the dom to update
-                await delayUntilNextAnimationFrame();
-
-                const params = generateJustTheWaveformParams(waveformContainerRef.current!, waveformRenderOptions);
-
-                resetParametersOnWavesurfer(params);
+                await configureForWaveformByItself();
             }
-            
+
             // Else the newly selected piece is an actual jewelry piece:
-            // 1. Set image src
-            // 2. Wait for onLoad fire
-            // 3. Set waveform parent ref style
-            // 4. Reset params on wavesurfer
             else {
-                // Set the src
-                pieceImgRef.current!.src = `${config.app.PUBLIC_URL}${pieces[selectedPiece].imgPath}`;
-
-                // Wait for onLoad
-                await waitForPieceImageLoad();
-
-                // Wait for the next frame for fun
-                await delayUntilNextAnimationFrame();
-
-                // Set waveform parent ref style based on the newly loaded image
-                waveformParentContainerRef.current!.style.position = 'absolute';
-                waveformParentContainerRef.current!.style.left = percentify(pieces[selectedPiece].waveformLeftOffset);
-                waveformParentContainerRef.current!.style.top = percentify(pieces[selectedPiece].waveformTopOffset);
-                waveformParentContainerRef.current!.style.width = percentify(pieces[selectedPiece].waveformRelativeWidth);
-                waveformParentContainerRef.current!.style.height = percentify(pieces[selectedPiece].waveformRelativeHeight);
-                waveformParentContainerRef.current!.style.transform = 'scale(1)';
-                waveformParentContainerRef.current!.style.transformOrigin = 'top left';
-
-                // Wait for the dom to update
-                await delayUntilNextAnimationFrame();
-
-                const params = generateWaveformAndJewelryParams(waveformContainerRef.current!, waveformRenderOptions, selectedPiece);
-
-                resetParametersOnWavesurfer(params);
+                await configureForWaveformWithJewelry();
             }
+
+            // Touch the active region so it gets re-rendered.
+            dispatch(setSelectedRegion([...selectedRegionRef.current]));
         }
 
         run();
@@ -425,12 +461,9 @@ export default function Waveform() {
             await waitForWavesurferAudioLoaded();
             //console.log('Region draw effect continuing...');
 
-            if (activePage !== 'trimmer') {
-                wavesurfer.current!.regions.clear();
-                return;
-            }
-
             wavesurfer.current!.regions.clear();
+
+            if (activePage !== 'trimmer') return;
 
             const duration = wavesurfer.current!.getDuration();
 
@@ -445,7 +478,8 @@ export default function Waveform() {
                 showTooltip: false,
             }
 
-            wavesurfer.current!.addRegion(region);
+            console.log('Drawing region');
+            wavesurfer.current!.regions.add(region);
         }
 
         run();
@@ -482,6 +516,7 @@ export default function Waveform() {
             // Wait for wavesurfer load & audio ready
             await waitForWavesurferDefined();
             await waitForWavesurferAudioLoaded();
+            await waitForPieceImageLoad();
 
             console.log('Registering DOM interaction handlers');
             parentContainerHolder = waveformParentContainerRef.current!;
@@ -610,17 +645,18 @@ export default function Waveform() {
         >
             <Row className='justify-content-center align-items-center'>
                 <Col>
-                    <div style={
-                        {
+                    <div
+                        style={{
                             position: 'relative',
                             display: 'inline-block',
                             width: '100%',
                             verticalAlign: 'top',
-                            touchAction: 'none'
-                        }
-                    }>
+                            touchAction: 'none',
+                            opacity: 0,
+                        }}
+                        ref={visualizerParentContainerRef}
+                    >
                         <img
-                            //src={`${config.app.PUBLIC_URL}${pieces[selectedPiece].imgPath}`}
                             className='m-0 p-0'
                             style={{ width: '100%' }}
                             onLoad={() => loadedPiece.current = selectedPiece}

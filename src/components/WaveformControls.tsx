@@ -29,11 +29,13 @@ import {
     StopFill,
     PauseFill,
     VolumeUp,
-    VolumeOff
+    VolumeOff,
+    Upload,
+    XDiamondFill
 } from 'react-bootstrap-icons';
 
 import { useAppSelector, useAppDispatch } from '../storeHooks';
-import { switchPage } from './designerSlice';
+import { disableJewelrySelector, enableJewelrySelector, switchPage } from './designerSlice';
 import {
     playPause,
     stop,
@@ -50,7 +52,13 @@ import {
     setSelectedPiece,
 } from './waveformSlice';
 
+import { PieceName, pieces } from '../jewelry';
+import useConfig from './useConfig';
+
 export default function WaveformControls() {
+
+    // project config
+    const config = useConfig();
 
     const dispatch = useAppDispatch();
     const playbackDirective = useAppSelector(state => state.waveform.playbackDirective);
@@ -59,25 +67,31 @@ export default function WaveformControls() {
     const [showRevertModal, setShowRevertModal] = useState<boolean>(false);
     const [showPieceSelectionModal, setShowPieceSelectionModal] = useState<boolean>(false);
 
+    const shouldDisplayJewelrySelector = useAppSelector(state => state.designer.shouldDisplayJewelrySelector);
+
     const handleModalRevertButtonClick = () => {
         setShowRevertModal(false);
         dispatch(revertTrimmedSelectionToOriginal())
     }
 
 
+    const selectPieceHandler = (name: PieceName) => {
+        dispatch(setSelectedPiece(name));
+        dispatch(disableJewelrySelector());
+    }
+
+
     // Repeat callback helper
     const repeaterRef = useRef<NodeJS.Timer>();
-    const startHoldDown = (callback: () => any) => {
+    const startHoldDown = (callback: () => any, interval: number) => {
         callback();
         clearInterval(repeaterRef.current);
-        repeaterRef.current = setInterval(callback, 50);
+        repeaterRef.current = setInterval(callback, interval);
     }
     const stopHoldDown = () => {
         clearInterval(repeaterRef.current);
     }
 
-
-    // If 
 
 
     return (
@@ -103,7 +117,7 @@ export default function WaveformControls() {
             <Row className='justify-content-center align-items-center border-bottom mt-3 pb-3 px-2'>
                 <Col xs='4' className='d-flex justify-content-center p-0 pe-1'>
                     <Button style={{ width: '100%' }} onClick={() => setShowRevertModal(true)} variant='warning'>
-                        <ArrowCounterclockwise size={25} /> Revert
+                        <ArrowCounterclockwise size={25} />&nbsp;Edit
                     </Button>
                 </Col>
 
@@ -133,16 +147,16 @@ export default function WaveformControls() {
                         <Col xs='3' className='d-flex justify-content-center p-0 pe-2'>
                             <ButtonGroup style={{ width: '100%' }} vertical>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarWidth(0.2)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarWidth(0.2)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarWidth(1)), 300)}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarWidth(1)), 300)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                 >
                                     <Plus size={25} />
                                 </Button>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarWidth(-0.2)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarWidth(-0.2)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarWidth(-1)), 300)}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarWidth(-1)), 300)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                 >
@@ -154,8 +168,8 @@ export default function WaveformControls() {
                         <Col xs='6' className='d-flex justify-content-center px-1'>
                             <ButtonGroup style={{ width: '100%' }}>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)), 50)}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)), 50)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                     disabled={waveformRenderOptions.audioNormalization}
@@ -168,8 +182,8 @@ export default function WaveformControls() {
                                     {waveformRenderOptions.audioNormalization ? <VolumeUp size={25} /> : 'Auto'}
                                 </Button>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)), 50)}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)), 50)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                     disabled={waveformRenderOptions.audioNormalization}
@@ -182,16 +196,16 @@ export default function WaveformControls() {
                         <Col xs='3' className='d-flex justify-content-center p-0 ps-2'>
                             <ButtonGroup style={{ width: '100%' }} vertical>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarGap(0.2)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarGap(0.2)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarGap(1)), 300)}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarGap(1)), 300)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                 >
                                     <Plus size={25} />
                                 </Button>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarGap(-0.2)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarGap(-0.2)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarGap(-1)), 300)}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarGap(-1)), 300)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                 >
@@ -206,7 +220,7 @@ export default function WaveformControls() {
                             Width
                         </Col>
                         <Col xs='6' className='fw-normal px-1'>
-                            { waveformRenderOptions.audioNormalization ? 'Auto' : 'Intensity' }
+                            {waveformRenderOptions.audioNormalization ? 'Auto' : 'Intensity'}
                         </Col>
                         <Col xs='3' className='fw-normal p-0 pe-1'>
                             Spacing
@@ -222,8 +236,8 @@ export default function WaveformControls() {
                         <Col xs='6' className='d-flex justify-content-center px-1'>
                             <ButtonGroup style={{ width: '100%' }}>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)), 50)}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)), 50)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                     disabled={waveformRenderOptions.audioNormalization}
@@ -236,8 +250,8 @@ export default function WaveformControls() {
                                     {waveformRenderOptions.audioNormalization ? <VolumeUp size={25} /> : 'Auto'}
                                 </Button>
                                 <Button variant='outline-dark'
-                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)))}
-                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)))}
+                                    onMouseDown={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)), 50)}
+                                    onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)), 50)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
                                     disabled={waveformRenderOptions.audioNormalization}
@@ -276,34 +290,80 @@ export default function WaveformControls() {
                 centered
             >
                 <Modal.Header closeButton>
-                    <Modal.Title className='text-center'>Undo Changes</Modal.Title>
+                    <Modal.Title className='text-center'>Edit Changes</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Stack className='text-center'>
                         <div>Are you sure?</div>
                         <div>This will revert your audio to a previous state.</div>
                     </Stack>
+
+                    <Row className='mt-3'>
+                        <Col xs='6' className='d-grid text-center'>
+                            <Button variant='outline-dark' onClick={() => dispatch(switchPage('uploader'))}>
+                                <div>Upload Again</div>
+                                <div><Upload /></div>
+                            </Button>
+                        </Col>
+                        <Col xs='6' className='d-grid text-center'>
+                            <Button variant='outline-dark' onClick={() => handleModalRevertButtonClick()}>
+                                <div>Revert to Original</div>
+                                <div><ArrowCounterclockwise /><ArrowCounterclockwise /></div>
+                            </Button>
+                        </Col>
+                    </Row>
+                    <Row className='mt-3'>
+                        <Col xs='6' className='d-grid text-center'>
+                            <Button variant='outline-dark' onClick={() => { }}>
+                                <div>Undo Once</div>
+                                <div><ArrowCounterclockwise /></div>
+                            </Button>
+                        </Col>
+                        <Col xs='6' className='d-grid text-center'>
+                            <Button variant='outline-dark' onClick={() => {
+                                setShowRevertModal(false);
+                                dispatch(enableJewelrySelector());
+                            }}>
+                                <div>Change Piece</div>
+                                <div><XDiamondFill /></div>
+                            </Button>
+                        </Col>
+                    </Row>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant='success' onClick={() => setShowRevertModal(false)}>
                         Cancel
                     </Button>
-                    <Button variant='warning' onClick={() => dispatch(switchPage('uploader'))}>
-                        Upload again
-                    </Button>
-                    <Button variant='warning' onClick={() => {}}>
-                        Undo once
-                    </Button>
-                    <Button variant='warning' onClick={() => handleModalRevertButtonClick()}>
-                        Revert to original
-                    </Button>
-                    <Button variant='primary' onClick={() => dispatch(setSelectedPiece('dogTag'))}>
-                        dogTag
-                    </Button>
-                    <Button variant='primary' onClick={() => dispatch(setSelectedPiece(null))}>
-                        null
-                    </Button>
                 </Modal.Footer>
+            </Modal>
+
+
+            <Modal
+                show={shouldDisplayJewelrySelector}
+                size='lg'
+                backdrop='static'
+                onHide={() => dispatch(disableJewelrySelector())}
+                aria-labelledby="contained-modal-title-vcenter"
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title className='text-center'>Select a Jewelry Piece</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {Object.entries(pieces).map(([name, pieceInfo]) => (
+                        <Row className='justify-content-center mt-3'>
+                            <Col className='text-center' onClick={() => selectPieceHandler(name as PieceName)}>
+                                <div className='mb-1'>{pieceInfo.prettyName}</div>
+                                <div>
+                                    <img
+                                        src={`${config.app.PUBLIC_URL}${pieceInfo.imgPreviewPath}`}
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+                            </Col>
+                        </Row>
+                    ))}
+                </Modal.Body>
             </Modal>
 
         </Container>
