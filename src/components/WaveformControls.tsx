@@ -46,7 +46,8 @@ import {
     toggleAudioNormalization,
     revertTrimmedSelectionToOriginal,
     swapMode,
-    setMode
+    setMode,
+    setSelectedPiece,
 } from './waveformSlice';
 
 export default function WaveformControls() {
@@ -56,6 +57,7 @@ export default function WaveformControls() {
     const waveformRenderOptions = useAppSelector(state => state.waveform.waveformRenderOptions);
 
     const [showRevertModal, setShowRevertModal] = useState<boolean>(false);
+    const [showPieceSelectionModal, setShowPieceSelectionModal] = useState<boolean>(false);
 
     const handleModalRevertButtonClick = () => {
         setShowRevertModal(false);
@@ -73,6 +75,9 @@ export default function WaveformControls() {
     const stopHoldDown = () => {
         clearInterval(repeaterRef.current);
     }
+
+
+    // If 
 
 
     return (
@@ -291,6 +296,12 @@ export default function WaveformControls() {
                     </Button>
                     <Button variant='warning' onClick={() => handleModalRevertButtonClick()}>
                         Revert to original
+                    </Button>
+                    <Button variant='primary' onClick={() => dispatch(setSelectedPiece('dogTag'))}>
+                        dogTag
+                    </Button>
+                    <Button variant='primary' onClick={() => dispatch(setSelectedPiece(null))}>
+                        null
                     </Button>
                 </Modal.Footer>
             </Modal>

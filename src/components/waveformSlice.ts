@@ -24,7 +24,7 @@ export interface WaveformState {
     activeTrimmedRegionHistory: [[number, number]],
     activeTrimmedRegionDuration: number,
 
-    selectedPiece: PieceName,
+    selectedPiece: PieceName | null,
 }
 
 const initialState: WaveformState = {
@@ -43,7 +43,7 @@ const initialState: WaveformState = {
     activeTrimmedRegionHistory: [[0, 1]],
     activeTrimmedRegionDuration: 0,
 
-    selectedPiece: 'dogTag',
+    selectedPiece: null,
 }
 
 export const waveformState = createSlice({
@@ -142,7 +142,7 @@ export const waveformState = createSlice({
             state.activeTrimmedRegion = originalRegion;
         },
 
-        setSelectedPiece: (state, action: PayloadAction<PieceName>) => {
+        setSelectedPiece: (state, action: PayloadAction<WaveformState['selectedPiece']>) => {
             state.selectedPiece = action.payload;
         },
     }

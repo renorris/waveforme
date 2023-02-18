@@ -9,7 +9,6 @@ import { InfoCircle } from 'react-bootstrap-icons';
 import { useAppSelector, useAppDispatch } from '../storeHooks';
 import { switchPage, setLocalOriginalMP3URL } from './designerSlice';
 import { resetState, setPhase } from './uploaderSlice';
-import { mp3UrlToAudioBuffer } from './designerUtil';
 
 export default function Uploader() {
     const dispatch = useAppDispatch();
