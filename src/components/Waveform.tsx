@@ -655,6 +655,7 @@ export default function Waveform() {
                             width: '100%',
                             verticalAlign: 'top',
                             touchAction: 'none',
+                            WebkitTouchCallout: 'none',
                             opacity: 0,
                         }}
                         ref={visualizerParentContainerRef}
@@ -663,6 +664,7 @@ export default function Waveform() {
                             className='m-0 p-0'
                             style={{ width: '100%' }}
                             onLoad={() => loadedPiece.current = selectedPiece}
+                            draggable={false}
                             ref={pieceImgRef}
                         />
                         <div
