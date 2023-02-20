@@ -112,7 +112,7 @@ export default function Uploader() {
                         <Col className='d-flex justify-content-center align-items-center text-wrap fw-light'>
                             <InfoCircle height={'auto'} />
                             <Col className='ms-2'>
-                                For the best experience possible, a <span className='fw-semibold'>five minute</span> upload limit is enforced.&nbsp;
+                                For the best experience possible, a <span className='fw-semibold'>one minute</span> upload limit is recommended.&nbsp;
                                 <span
                                     style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
                                     onClick={() => setShowAudioTrimHelp(true)}

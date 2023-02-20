@@ -50,6 +50,7 @@ import {
     swapMode,
     setMode,
     setSelectedPiece,
+    undoSingleTrimSelection,
 } from './waveformSlice';
 
 import { PieceName, pieces } from '../jewelry';
@@ -295,7 +296,10 @@ export default function WaveformControls() {
                 <Modal.Body>
                     <Row className='mt-3'>
                         <Col xs='6' className='d-grid text-center'>
-                            <Button variant='outline-dark' onClick={() => { }}>
+                            <Button variant='outline-dark' onClick={() => { 
+                                setShowRevertModal(false);
+                                dispatch(undoSingleTrimSelection());
+                            }}>
                                 <div>Undo Last Trim</div>
                                 <div><ArrowCounterclockwise /></div>
                             </Button>

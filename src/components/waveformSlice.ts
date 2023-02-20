@@ -21,7 +21,7 @@ export interface WaveformState {
     selectedRegion: [number, number],
 
     activeTrimmedRegion: [number, number],
-    activeTrimmedRegionHistory: [[number, number]],
+    activeTrimmedRegionHistory: [number, number][],
     activeTrimmedRegionDuration: number,
 
     selectedPiece: PieceName | null,
@@ -145,6 +145,22 @@ export const waveformState = createSlice({
             state.activeTrimmedRegion = originalRegion;
         },
 
+        undoSingleTrimSelection: state => {
+            const history = [...state.activeTrimmedRegionHistory];
+            
+            // Don't do anything if there's only one element in the list
+            if (history.length <= 1) return;
+
+            // Remove the latest trim
+            history.pop();
+
+            // Set active to the latest
+            state.activeTrimmedRegion = history[history.length - 1];
+
+            // Update history list
+            state.activeTrimmedRegionHistory = history;
+        },
+
         setSelectedPiece: (state, action: PayloadAction<WaveformState['selectedPiece'] | null>) => {
             state.selectedPiece = action.payload;
         },
@@ -175,6 +191,7 @@ export const {
     setActiveTrimmedRegionDuration,
     transferSelectedRegionToTrimmedRegion,
     revertTrimmedSelectionToOriginal,
+    undoSingleTrimSelection,
     setSelectedPiece,
 } = waveformState.actions;
 
