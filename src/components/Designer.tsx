@@ -14,7 +14,6 @@ import Export from './Export';
 export default function Designer() {
     const dispatch = useAppDispatch();
     const activePage = useAppSelector(state => state.designer.activePage);
-    const mp3URL = useAppSelector(state => state.designer.localOriginalMP3URL);
 
     return (
         <>

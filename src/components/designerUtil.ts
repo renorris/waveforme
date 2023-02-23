@@ -2,24 +2,24 @@
 // Copyright (C) 2023 Reese Norris - All Rights Reserved
 
 /**
- * Convert audio/mp3 URL to AudioBuffer with start and end positions.
+ * Convert audio/webm URL to AudioBuffer with start and end positions.
  * 
- * @param {string} url URL containing audio/mp3
+ * @param {string} url URL containing audio/webm
  * @param {number} start Normalized (0-1) start position to trim (optional)
  * @param {number} end Normalized (0-1) end position to trim (optional)
  * 
  * @return {AudioBuffer} Newly built AudioBuffer
  */
 
-const mp3UrlToAudioBuffer = async (url: string, start: number = 0, end: number = 1): Promise<AudioBuffer> => {
+const opusWebmUrlToAudioBuffer = async (url: string, start: number = 0, end: number = 1): Promise<AudioBuffer> => {
 
     // Fetch audio from URL
     const res = await fetch(url);
     const blob = await res.blob();
 
     // Throw error if type is not mp3
-    if (blob.type !== 'audio/mp3') {
-        throw new Error('File type not audio/mp3!');
+    if (blob.type !== 'audio/webm') {
+        throw new Error('File type not audio/webm!');
     }
 
     // Decode audiobuffer from mp3
@@ -76,4 +76,4 @@ const mp3UrlToAudioBuffer = async (url: string, start: number = 0, end: number =
 }
 
 
-export { mp3UrlToAudioBuffer };
+export { opusWebmUrlToAudioBuffer as mp3UrlToAudioBuffer };

@@ -23,11 +23,11 @@ export default function Export() {
         localWaveformImageURLRef.current = localWaveformImageURL?.slice(0);
     }, [localWaveformImageURL]);
 
-    const localOriginalMP3URL = useAppSelector(state => state.designer.localOriginalMP3URL);
+    const localOriginalOpusWebmURL = useAppSelector(state => state.designer.localOriginalOpusWebmURL);
     const localOriginalMP3URLRef = useRef<string>();
     useEffect(() => {
-        localOriginalMP3URLRef.current = localOriginalMP3URL?.slice(0);
-    }, [localOriginalMP3URL]);
+        localOriginalMP3URLRef.current = localOriginalOpusWebmURL?.slice(0);
+    }, [localOriginalOpusWebmURL]);
 
     const activeTrimmedRegion = useAppSelector(state => state.waveform.activeTrimmedRegion);
     const activeTrimmedRegionRef = useRef<[number, number]>([0, 0]);
@@ -58,7 +58,7 @@ export default function Export() {
         await new Promise(r => setTimeout(r, 100));
 
         // Dynamic load ffmpeg
-        const ffmpeg = await import('ffmpeg.js/ffmpeg-mp4');
+        const ffmpeg = await import('ffmpeg.js');
 
         // Perform ffmpeg encoding
         let error = false;
@@ -67,11 +67,11 @@ export default function Export() {
                 name: 'trimmed_audio.wav',
                 data: new Uint8Array(wav),
             }],
-            arguments: ['-i', 'trimmed_audio.wav', '-vn', '-ac', '1', '-b:a', '128k', 'waveforme_output.mp3'],
+            arguments: ['-i', 'trimmed_audio.wav', '-vn', '-c:a', 'libopus', '-ac', '1', '-b:a', '64k', 'waveforme_output.webm'],
         });
 
         if (error) {
-            alert('Error encoding MP3!');
+            alert('Error encoding audio!');
             return;
         }
 
@@ -79,7 +79,7 @@ export default function Export() {
         const resultFile = new File(
             [result.MEMFS[0].data],
             result.MEMFS[0].name,
-            { type: 'audio/mp3' },
+            { type: 'audio/webm' },
         );
 
         FileSaver.saveAs(resultFile, resultFile.name);

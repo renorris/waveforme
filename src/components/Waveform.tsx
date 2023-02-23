@@ -25,7 +25,7 @@ export default function Waveform() {
     // Config redux
     const dispatch = useAppDispatch();
     const activePage = useAppSelector(state => state.designer.activePage);
-    const localOriginalMP3URL = useAppSelector(state => state.designer.localOriginalMP3URL);
+    const setLocalOriginalOpusWebmURL = useAppSelector(state => state.designer.localOriginalOpusWebmURL);
     const waveformRenderOptions = useAppSelector(state => state.waveform.waveformRenderOptions);
     const playbackDirective = useAppSelector(state => state.waveform.playbackDirective);
     const activeTrimmedRegion = useAppSelector(state => state.waveform.activeTrimmedRegion);
@@ -68,6 +68,8 @@ export default function Waveform() {
         normalization: boolean,
         height: number | undefined,
         pixelRatio: number | undefined,
+        shouldCutoff: boolean,
+        cutoffIntensity: number,
     ) => ({
         barHeight: barHeight,
         barWidth: mode === 'bar' ? Math.round(barWidth) : null,
@@ -85,6 +87,8 @@ export default function Waveform() {
         barMinHeight: 3,
         height: height ? height : 128,
         pixelRatio: pixelRatio ? pixelRatio : 1,
+        shouldCutoff: shouldCutoff,
+        cutoffIntensity: cutoffIntensity,
     } as WaveSurferParams);
 
     // Param generator for just the waveform by itself
@@ -99,6 +103,8 @@ export default function Waveform() {
             waveformRenderOptions.audioNormalization,
             container.parentElement!.clientWidth * 0.5, // height to 0.5 width
             1200 / container.clientWidth, // pixel ratio to ensure 1200x600 resolution
+            waveformRenderOptions.shouldCutoff,
+            waveformRenderOptions.cutoffIntensity,
         );
     }
 
@@ -117,6 +123,8 @@ export default function Waveform() {
             // Container height = existing width times the width-to-height ratio, hopefully perfect every time
             container.parentElement!.clientWidth * (p.waveformTargetResolution.height / p.waveformTargetResolution.width),
             p.waveformTargetResolution.width / container.clientWidth,
+            waveformRenderOptions.shouldCutoff,
+            waveformRenderOptions.cutoffIntensity,
         );
     }
 
@@ -346,16 +354,16 @@ export default function Waveform() {
 
             //console.log('Render new MP3 URL on wavesurfer');
             // Get audiobuffer from current URL
-            if (!localOriginalMP3URL) return;
+            if (!setLocalOriginalOpusWebmURL) return;
 
-            const audioBuf = await mp3UrlToAudioBuffer(localOriginalMP3URL, activeTrimmedRegion[0], activeTrimmedRegion[1]);
+            const audioBuf = await mp3UrlToAudioBuffer(setLocalOriginalOpusWebmURL, activeTrimmedRegion[0], activeTrimmedRegion[1]);
             dispatch(setActiveTrimmedRegionDuration(audioBuf.duration));
             drawAudioBufferOnWavesurfer(audioBuf);
         }
 
         run();
 
-    }, [localOriginalMP3URL, activeTrimmedRegion]);
+    }, [setLocalOriginalOpusWebmURL, activeTrimmedRegion]);
 
 
 

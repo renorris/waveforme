@@ -14,6 +14,8 @@ export interface WaveformState {
         barWidth: number,
         barGap: number,
         audioNormalization: boolean,
+        shouldCutoff: boolean,
+        cutoffIntensity: number,
     }
 
     playbackDirective: 'play' | 'pause' | 'stop',
@@ -34,7 +36,9 @@ const initialState: WaveformState = {
         barHeight: 1,
         barWidth: 1,
         barGap: 1,
-        audioNormalization: false
+        audioNormalization: false,
+        shouldCutoff: false,
+        cutoffIntensity: 2,
     },
     playbackDirective: 'stop',
     selectedRegion: [0.25, 0.75],
@@ -91,6 +95,25 @@ export const waveformState = createSlice({
         },
         toggleAudioNormalization: (state) => {
             state.waveformRenderOptions.audioNormalization = !state.waveformRenderOptions.audioNormalization;
+        },
+        enableCutoff: state => {
+            state.waveformRenderOptions.shouldCutoff = true;
+        },
+        disableCutoff: state => {
+            state.waveformRenderOptions.shouldCutoff = false;
+        },
+        toggleCutoff: state => {
+            state.waveformRenderOptions.shouldCutoff = !state.waveformRenderOptions.shouldCutoff;
+        },
+        incrementCutoffIntensity: state => {
+            if (state.waveformRenderOptions.cutoffIntensity + 0.1 < 0.8) {
+                state.waveformRenderOptions.cutoffIntensity += 0.1;
+            }
+        },
+        decrementCutoffIntensity: state => {
+            if (state.waveformRenderOptions.cutoffIntensity - 0.1 > 0.1) {
+                state.waveformRenderOptions.cutoffIntensity -= 0.1;
+            }
         },
 
 
@@ -180,6 +203,11 @@ export const {
     incrementBarGap,
     setAudioNormalization,
     toggleAudioNormalization,
+    enableCutoff,
+    disableCutoff,
+    toggleCutoff,
+    incrementCutoffIntensity,
+    decrementCutoffIntensity,
     play,
     pause,
     playPause,

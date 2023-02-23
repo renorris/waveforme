@@ -6,14 +6,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface DesignerState {
     activePage: 'uploader' | 'main' | 'trimmer' | 'exporter',
     shouldDisplayJewelrySelector: boolean,
-    localOriginalMP3URL: string | null,
+    localOriginalOpusWebmURL: string | null,
     localWaveformImageURL: string | null,
 }
 
 const initialState: DesignerState = {
     activePage: 'uploader',
     shouldDisplayJewelrySelector: true,
-    localOriginalMP3URL: null,
+    localOriginalOpusWebmURL: null,
     localWaveformImageURL: null,
 }
 
@@ -26,11 +26,11 @@ export const designerSlice = createSlice({
             state.activePage = action.payload;
         },
 
-        setLocalOriginalMP3URL: (state, action: PayloadAction<string | null>) => {
+        setLocalOriginalOpusWebmURL: (state, action: PayloadAction<string | null>) => {
             // Clean up existing URL if exists
-            if (state.localOriginalMP3URL !== null) {
+            if (state.localOriginalOpusWebmURL !== null) {
                 try {
-                    window.URL.revokeObjectURL(state.localOriginalMP3URL);
+                    window.URL.revokeObjectURL(state.localOriginalOpusWebmURL);
                 }
                 catch (err) {
                     console.error('Error revoking original MP3 URL.');
@@ -39,7 +39,7 @@ export const designerSlice = createSlice({
             }
 
             // Set new URL
-            state.localOriginalMP3URL = action.payload;
+            state.localOriginalOpusWebmURL = action.payload;
         },
 
         setLocalWaveformImageURL: (state, action: PayloadAction<string | null>) => {
@@ -70,7 +70,7 @@ export const designerSlice = createSlice({
 
 export const {
     switchPage,
-    setLocalOriginalMP3URL,
+    setLocalOriginalOpusWebmURL,
     setLocalWaveformImageURL,
     enableJewelrySelector,
     disableJewelrySelector,

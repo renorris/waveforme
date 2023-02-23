@@ -7,7 +7,7 @@ import { Button, Col, Container, Modal, Row, Stack } from 'react-bootstrap';
 import { InfoCircle } from 'react-bootstrap-icons';
 
 import { useAppSelector, useAppDispatch } from '../storeHooks';
-import { switchPage, setLocalOriginalMP3URL } from './designerSlice';
+import { switchPage, setLocalOriginalOpusWebmURL } from './designerSlice';
 import { resetState, setPhase } from './uploaderSlice';
 
 export default function Uploader() {
@@ -26,7 +26,7 @@ export default function Uploader() {
 
     // Touch wavesurfer and ffmpeg helper
     const touchLibraries = async () => {
-        import('ffmpeg.js/ffmpeg-mp4');
+        import('ffmpeg.js');
         import('wavesurfer.js');
         import('wavesurfer.js/src/plugin/regions');
     }
@@ -43,7 +43,7 @@ export default function Uploader() {
         await new Promise(r => setTimeout(r, 100));
 
         // Dynamic load ffmpeg
-        const ffmpeg = await import('ffmpeg.js/ffmpeg-mp4');
+        const ffmpeg = await import('ffmpeg.js');
 
         // Perform ffmpeg encoding
         let error = false;
@@ -52,7 +52,7 @@ export default function Uploader() {
                 name: file.name,
                 data: new Uint8Array(await file.arrayBuffer()),
             }],
-            arguments: ['-i', file.name, '-vn', '-ac', '1', '-b:a', '128k', 'audio.mp3'],
+            arguments: ['-i', file.name, '-vn', '-c:a', 'libopus', '-ac', '1', '-b:a', '64k', 'audio.webm'],
 
             // For some reason stdout is going to stderr. Disable for now. TODO: WebWorkerify ffmpeg and make it awesome
             // print: (data) => { console.log(`FFmpeg STDOUT > ${data}`) },
@@ -72,12 +72,12 @@ export default function Uploader() {
         const resultFile = new File(
             [result.MEMFS[0].data],
             result.MEMFS[0].name,
-            { type: 'audio/mp3' },
+            { type: 'audio/webm' },
         );
 
         // Create an object URL for our audiobuffer and original file and update our state to reflect them
         const localOriginalMP3URL = window.URL.createObjectURL(resultFile);
-        dispatch(setLocalOriginalMP3URL(localOriginalMP3URL));
+        dispatch(setLocalOriginalOpusWebmURL(localOriginalMP3URL));
 
         // Switch active page to main
         dispatch(switchPage('main'));
