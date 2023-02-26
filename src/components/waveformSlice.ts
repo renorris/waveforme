@@ -32,11 +32,11 @@ export interface WaveformState {
 const initialState: WaveformState = {
     waveformRenderOptions: {
         heightMultiplier: 0.5,
-        mode: 'bar',
+        mode: 'wave',
         barHeight: 1,
         barWidth: 1,
         barGap: 1,
-        audioNormalization: false,
+        audioNormalization: true,
         shouldCutoff: true,
         cutoffIntensity: 2,
     },
@@ -71,10 +71,12 @@ export const waveformState = createSlice({
         },
         setBarHeight: (state, action: PayloadAction<number>) => {
             state.waveformRenderOptions.barHeight = action.payload;
+            state.waveformRenderOptions.audioNormalization = false;
         },
         incrementBarHeight: (state, action: PayloadAction<number>) => {
             if (action.payload < 0 && state.waveformRenderOptions.barHeight <= 0) return;
             state.waveformRenderOptions.barHeight += action.payload;
+            state.waveformRenderOptions.audioNormalization = false;
         },
         setBarWidth: (state, action: PayloadAction<number>) => {
             state.waveformRenderOptions.barWidth = action.payload;

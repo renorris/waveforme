@@ -101,7 +101,7 @@ export default function WaveformControls() {
 
 
     return (
-        <Container style={{ maxWidth: '640px' }}>
+        <Container style={{ maxWidth: '640px', userSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none' }}>
 
             <Row className='justify-content-center align-items-center mt-4'>
                 <Col xs='3' className='p-0' />
@@ -134,8 +134,8 @@ export default function WaveformControls() {
                         </Dropdown.Toggle>
 
                         <Dropdown.Menu variant='outline-dark'>
-                            <Dropdown.Item active={waveformRenderOptions.mode === 'bar'} onClick={() => dispatch(setMode('bar'))}><BarChart />&nbsp;Bars</Dropdown.Item>
                             <Dropdown.Item active={waveformRenderOptions.mode === 'wave'} onClick={() => dispatch(setMode('wave'))}><Flower1 />&nbsp;Natural</Dropdown.Item>
+                            <Dropdown.Item active={waveformRenderOptions.mode === 'bar'} onClick={() => dispatch(setMode('bar'))}><BarChart />&nbsp;Bars</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                 </Col>
@@ -178,7 +178,6 @@ export default function WaveformControls() {
                                     onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)), 50)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
-                                    disabled={waveformRenderOptions.audioNormalization}
                                 >
                                     <Dash size={25} />
                                 </Button>
@@ -192,7 +191,6 @@ export default function WaveformControls() {
                                     onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)), 50)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
-                                    disabled={waveformRenderOptions.audioNormalization}
                                 >
                                     <Plus size={25} />
                                 </Button>
@@ -246,7 +244,6 @@ export default function WaveformControls() {
                                     onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(-0.05)), 50)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
-                                    disabled={waveformRenderOptions.audioNormalization}
                                 >
                                     <Dash size={25} />
                                 </Button>
@@ -260,7 +257,6 @@ export default function WaveformControls() {
                                     onTouchStart={() => startHoldDown(() => dispatch(incrementBarHeight(0.05)), 50)}
                                     onMouseUp={stopHoldDown}
                                     onTouchEnd={stopHoldDown}
-                                    disabled={waveformRenderOptions.audioNormalization}
                                 >
                                     <Plus size={25} />
                                 </Button>
