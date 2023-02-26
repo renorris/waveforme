@@ -120,35 +120,6 @@ export default function WaveformControls() {
                 <Col xs='3' className='p-0' />
             </Row>
 
-            <Row>
-                <Col>
-                    <Button onClick={() => dispatch(toggleCutoff())}>{waveformRenderOptions.shouldCutoff ? 'Cutoff Enabled' : 'Cutoff Disabled'}</Button>
-                </Col>
-                <Col>
-                    Cutoff intensity
-                    <ButtonGroup style={{ width: '100%' }}>
-                        <Button variant='outline-dark'
-                            onMouseDown={() => startHoldDown(() => dispatch(incrementCutoffIntensity()), 200)}
-                            onTouchStart={() => startHoldDown(() => dispatch(incrementCutoffIntensity()), 200)}
-                            onMouseUp={stopHoldDown}
-                            onTouchEnd={stopHoldDown}
-                            disabled={!waveformRenderOptions.shouldCutoff}
-                        >
-                            <Dash size={25} />
-                        </Button>
-                        <Button variant='outline-dark'
-                            onMouseDown={() => startHoldDown(() => dispatch(decrementCutoffIntensity()), 200)}
-                            onTouchStart={() => startHoldDown(() => dispatch(decrementCutoffIntensity()), 200)}
-                            onMouseUp={stopHoldDown}
-                            onTouchEnd={stopHoldDown}
-                            disabled={!waveformRenderOptions.shouldCutoff}
-                        >
-                            <Plus size={25} />
-                        </Button>
-                    </ButtonGroup>
-                </Col>
-            </Row>
-
             <Row className='justify-content-center align-items-center border-bottom mt-3 pb-3 px-2'>
                 <Col xs='4' className='d-flex justify-content-center p-0 pe-1'>
                     <Button style={{ width: '100%' }} onClick={() => setShowRevertModal(true)} variant='warning'>

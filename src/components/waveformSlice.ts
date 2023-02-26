@@ -37,7 +37,7 @@ const initialState: WaveformState = {
         barWidth: 1,
         barGap: 1,
         audioNormalization: false,
-        shouldCutoff: false,
+        shouldCutoff: true,
         cutoffIntensity: 2,
     },
     playbackDirective: 'stop',
