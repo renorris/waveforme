@@ -45,4 +45,8 @@ module.exports = {
         filename: "[name].js",
         sourceMapFilename: "[file].map",
     },
+
+    externals: {
+        "argon2": "argon2",
+    },
 }

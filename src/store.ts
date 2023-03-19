@@ -8,12 +8,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import designerSlice from './components/designerSlice';
 import uploaderSlice from './components/uploaderSlice';
 import waveformSlice from './components/waveformSlice';
+import authSlice from './components/authSlice';
 
 const store = configureStore({
     reducer: {
         designer: designerSlice,
         uploader: uploaderSlice,
         waveform: waveformSlice,
+        auth: authSlice,
     },
 });
 

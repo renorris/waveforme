@@ -22,6 +22,7 @@ provider:
 plugins:
   - serverless-webpack
   - serverless-offline
+  - serverless-iam-roles-per-function
 
 functions:
   serve:
@@ -32,10 +33,66 @@ functions:
           path: /
       - httpApi:
           method: GET
-          path: /about
+          path: /app
       - httpApi:
           method: GET
-          path: /design
+          path: /app/about
+      - httpApi:
+          method: GET
+          path: /app/design
+      - httpApi:
+          method: GET
+          path: /app/login
+      - httpApi:
+          method: GET
+          path: /app/create-account
+  
+  stashResult:
+    handler: handler.stashResult
+    events:
+      - httpApi:
+          method: POST
+          path: /rest/stashResult
+  
+  login:
+    handler: handler.login
+    events:
+      - httpApi:
+          method: POST
+          path: /rest/login
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action: 
+          - "s3:GetObject"
+        Resource: "arn:aws:s3:::waveforme-jwt/*"
+  
+  verifyEmail:
+    handler: handler.verifyEmail
+    events:
+      - httpApi:
+          method: POST
+          path: /rest/verifyEmail
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action: 
+          - "s3:GetObject"
+        Resource: "arn:aws:s3:::waveforme-jwt/*"
+      - Effect: "Allow"
+        Action:
+          - "ses:SendEmail"
+        Resource: "arn:aws:ses:us-east-2:804178625761:identity/waveforme.net"
+  
+  createAccount:
+    handler: handler.createAccount
+    events:
+      - httpApi:
+          method: POST
+          path: /rest/createAccount
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action: 
+          - "s3:GetObject"
+        Resource: "arn:aws:s3:::waveforme-jwt/*"
 
 custom:
   webpack:

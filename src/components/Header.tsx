@@ -10,13 +10,24 @@ import NavLink from "react-bootstrap/esm/NavLink";
 import Navbar from "react-bootstrap/esm/Navbar";
 import { Link } from "react-router-dom";
 
+import useConfig from "./useConfig";
 import logo from "../assets/logo.svg";
+import { useAppSelector } from "../storeHooks";
+import { Person } from "react-bootstrap-icons";
 
 function Header() {
+
+    // project config
+    const config = useConfig();
+
+    const loggedIn = useAppSelector(state => state.auth.loggedIn);
+    const firstName = useAppSelector(state => state.auth.firstName);
+    const lastName = useAppSelector(state => state.auth.lastName);
+
     return (
         <Navbar bg="grey" className="border-bottom px-0 mx-0 py-0 mt-0 mb-2">
             <Container fluid className="justify-content-start">
-                <Nav.Link as={Link} to="/">
+                <Nav.Link as={Link} to="/app">
                     <Navbar.Brand>
                         <img
                             alt="Waveforme Logo"
@@ -29,10 +40,21 @@ function Header() {
                 </Nav.Link>
 
                 <Nav className="d-none d-sm-flex">
-                    <Nav.Link as={Link} to="/">Home</Nav.Link>
-                    <Nav.Link as={Link} to="/about">About</Nav.Link>
-                    <Nav.Link as={Link} to="/design">Design Yours</Nav.Link>
+                    <Nav.Link as={Link} to="/app">Home</Nav.Link>
+                    <Nav.Link as={Link} to="/app/about">About</Nav.Link>
+                    <Nav.Link as={Link} to="/app/design">Design Yours</Nav.Link>
                 </Nav>
+
+                <Navbar.Collapse className="d-flex d-sm-none justify-content-end">
+                    <Navbar.Text>
+                        { !loggedIn &&
+                            <Nav.Link as={Link} to="/app/login">Login</Nav.Link>
+                        }
+                        { loggedIn &&
+                            <Nav.Link as={Link} to="/app/dashboard"><Person /> {firstName} {lastName}</Nav.Link>
+                        }
+                    </Navbar.Text>
+                </Navbar.Collapse>
 
                 <Container fluid className="d-flex d-sm-none justify-content-end">
                     <Nav>
@@ -40,13 +62,13 @@ function Header() {
                             <Dropdown.Toggle as={NavLink}>Menu</Dropdown.Toggle>
                             <Dropdown.Menu>
                                 <Dropdown.Item>
-                                    <Nav.Link as={Link} to="/">Home</Nav.Link>
+                                    <Nav.Link as={Link} to="/app">Home</Nav.Link>
                                 </Dropdown.Item>
                                 <Dropdown.Item>
-                                    <Nav.Link as={Link} to="/about">About</Nav.Link>
+                                    <Nav.Link as={Link} to="/app/about">About</Nav.Link>
                                 </Dropdown.Item>
                                 <Dropdown.Item>
-                                    <Nav.Link as={Link} to="/design">Design Yours</Nav.Link>
+                                    <Nav.Link as={Link} to="/app/design">Design Yours</Nav.Link>
                                 </Dropdown.Item>
                             </Dropdown.Menu>
                         </Dropdown>

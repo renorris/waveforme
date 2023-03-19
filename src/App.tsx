@@ -10,6 +10,8 @@ import store from './store';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import DesignPage from './pages/DesignPage';
+import LoginPage from './pages/LoginPage';
+import CreateAccountPage from './pages/CreateAccount';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -18,9 +20,11 @@ function App() {
         //<React.StrictMode>
             <Provider store={store}>
                 <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/about" element={<AboutPage />} />
-                    <Route path="/design" element={<DesignPage />} />
+                    <Route path="/app" element={<HomePage />} />
+                    <Route path="/app/about" element={<AboutPage />} />
+                    <Route path="/app/design" element={<DesignPage />} />
+                    <Route path="/app/login" element={<LoginPage />} />
+                    <Route path="/app/create-account" element={<CreateAccountPage />} />
                 </Routes>
             </Provider>
         //</React.StrictMode>
