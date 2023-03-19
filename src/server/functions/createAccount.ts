@@ -15,6 +15,52 @@ const createAccount = async (event: APIGatewayProxyEventV2, _context: Context): 
         console.log('createAccount is running');
 
         const reqObj: CreateAccountRequest = JSON.parse(event.body!);
+
+        // Verify that JWT is valid
+        const s3 = new S3({
+            region: 'us-east-2'
+        });
+        const params = {
+            Bucket: 'waveforme-jwt',
+            Key: 'key'
+        }
+        const s3Res = await s3.getObject(params);
+        if (s3Res.Body === undefined) {
+            console.error('Error with s3.getObject');
+            return {
+                statusCode: 500,
+                headers: {
+                    'Content-Type': 'text/plain',
+                },
+                body: 'Internal server error',
+            }
+        }
+        const alg = 'RS256';
+        const pkcs8 = await s3Res.Body!.transformToString('utf-8');
+        const privateKey = await jose.importPKCS8(pkcs8, alg);
+        try {
+            const jwtVerifyResult = await jose.jwtVerify(reqObj.token, privateKey)
+        }
+        catch (err) {
+            // Verification error, assume it's a forged token.
+            console.log('jwt verification failed.');
+
+            // Gen response
+            const resObj: CreateAccountResponse = {
+                error: true,
+                msg: 'Invalid token',
+                token: undefined
+            }
+
+            return {
+                statusCode: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(resObj),
+            }
+        }
+        // Extract email from token
         const decodedToken = jose.decodeJwt(reqObj.token);
         const tokenEmail = decodedToken.email as string;
 
@@ -29,7 +75,7 @@ const createAccount = async (event: APIGatewayProxyEventV2, _context: Context): 
         }
         const getItemCmd = new GetItemCommand(getItemCmdParams);
         const getItemDbRes = await dynamoDbClient.send(getItemCmd);
-        
+
         if (getItemDbRes.Item) {
             // There's already a registered account. Silently just send back an OK for obfuscation.
             console.log('Already account exists. Deny account creation');
@@ -57,36 +103,12 @@ const createAccount = async (event: APIGatewayProxyEventV2, _context: Context): 
         }
 
         // Create & sign JWT
-        const s3 = new S3({
-            region: 'us-east-2'
-        });
-
-        const params = {
-            Bucket: 'waveforme-jwt',
-            Key: 'key'
-        }
-
-        const s3Res = await s3.getObject(params);
-        if (s3Res.Body === undefined) {
-            console.error('Error with s3.getObject');
-            return {
-                statusCode: 500,
-                headers: {
-                    'Content-Type': 'text/plain',
-                },
-                body: 'Internal server error',
-            }
-        }
-
-        const alg = 'RS256';
-        const pkcs8 = await s3Res.Body!.transformToString('utf-8');
-        const privateKey = await jose.importPKCS8(pkcs8, alg);
         const jwt = await new jose.SignJWT(claims)
-        .setProtectedHeader({ alg })
-        .setIssuedAt()
-        .setIssuer('waveforme.net')
-        .setExpirationTime('2h')
-        .sign(privateKey);
+            .setProtectedHeader({ alg })
+            .setIssuedAt()
+            .setIssuer('waveforme.net')
+            .setExpirationTime('2h')
+            .sign(privateKey);
 
         // Hash password
         const hash = await argon2.hash(reqObj.password);
@@ -116,10 +138,10 @@ const createAccount = async (event: APIGatewayProxyEventV2, _context: Context): 
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({foo: 'bar'}),
+            body: JSON.stringify(resObj),
         }
     }
-    
+
     catch (e) {
         console.error(`Exception thrown in createAccount:\n${e}`);
         return {
