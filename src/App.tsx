@@ -12,6 +12,7 @@ import AboutPage from './pages/AboutPage';
 import DesignPage from './pages/DesignPage';
 import LoginPage from './pages/LoginPage';
 import CreateAccountPage from './pages/CreateAccount';
+import UserDashboardPage from './pages/UserDashboard';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -23,6 +24,7 @@ function App() {
                     <Route path="/app" element={<HomePage />} />
                     <Route path="/app/about" element={<AboutPage />} />
                     <Route path="/app/design" element={<DesignPage />} />
+                    <Route path="/app/dashboard" element={<UserDashboardPage />} />
                     <Route path="/app/login" element={<LoginPage />} />
                     <Route path="/app/create-account" element={<CreateAccountPage />} />
                 </Routes>

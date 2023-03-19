@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import useConfig from "./useConfig";
 import logo from "../assets/logo.svg";
 import { useAppSelector } from "../storeHooks";
-import { Person } from "react-bootstrap-icons";
+import { House, Person } from "react-bootstrap-icons";
 
 function Header() {
 
@@ -43,24 +43,27 @@ function Header() {
                     <Nav.Link as={Link} to="/app">Home</Nav.Link>
                     <Nav.Link as={Link} to="/app/about">About</Nav.Link>
                     <Nav.Link as={Link} to="/app/design">Design Yours</Nav.Link>
+                    {!loggedIn &&
+                        <Nav.Link as={Link} to="/app/login">Login</Nav.Link>
+                    }
+                    {loggedIn &&
+                        <Nav.Link as={Link} to="/app/dashboard"><Person /> {firstName}</Nav.Link>
+                    }
                 </Nav>
-
-                <Navbar.Collapse className="d-flex d-sm-none justify-content-end">
-                    <Navbar.Text>
-                        { !loggedIn &&
-                            <Nav.Link as={Link} to="/app/login">Login</Nav.Link>
-                        }
-                        { loggedIn &&
-                            <Nav.Link as={Link} to="/app/dashboard"><Person /> {firstName} {lastName}</Nav.Link>
-                        }
-                    </Navbar.Text>
-                </Navbar.Collapse>
 
                 <Container fluid className="d-flex d-sm-none justify-content-end">
                     <Nav>
                         <Dropdown as={NavItem} align="end">
-                            <Dropdown.Toggle as={NavLink}>Menu</Dropdown.Toggle>
+                            <Dropdown.Toggle as={NavLink}><House size={20} /></Dropdown.Toggle>
                             <Dropdown.Menu>
+                                <Dropdown.Item>
+                                    {!loggedIn &&
+                                        <Nav.Link as={Link} to="/app/login">Login</Nav.Link>
+                                    }
+                                    {loggedIn &&
+                                        <Nav.Link as={Link} to="/app/dashboard"><Person /> {firstName}</Nav.Link>
+                                    }
+                                </Dropdown.Item>
                                 <Dropdown.Item>
                                     <Nav.Link as={Link} to="/app">Home</Nav.Link>
                                 </Dropdown.Item>

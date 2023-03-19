@@ -6,20 +6,25 @@ import * as jose from 'jose';
 
 import { useAppSelector, useAppDispatch } from '../storeHooks';
 import { Button, Form } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import useConfig from './useConfig';
 import { LoginResponse } from '../interfaces/loginInterfaces';
-import { LoginInfo, login } from './authSlice';
+import { LoginInfo, login, logout } from './authSlice';
 
 export default function LoginForm() {
 
     const config = useConfig();
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+
+    const loggedIn = useAppSelector(state => state.auth.loggedIn);
 
     const emailRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
     const rememberMeRef = useRef<HTMLInputElement>(null);
 
     const submitLogin = async () => {
+        dispatch(logout());
         const email = emailRef.current!.value;
         const password = passwordRef.current!.value;
         const rememberMe = rememberMeRef.current!.checked;
@@ -63,6 +68,10 @@ export default function LoginForm() {
         // Dispatch login
         dispatch(login(loginInfo));
     }
+
+    useEffect(() => {
+        if (loggedIn) navigate('/app/dashboard');
+    }, [loggedIn])
 
     return (
         <Form>

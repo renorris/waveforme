@@ -36,16 +36,7 @@ functions:
           path: /app
       - httpApi:
           method: GET
-          path: /app/about
-      - httpApi:
-          method: GET
-          path: /app/design
-      - httpApi:
-          method: GET
-          path: /app/login
-      - httpApi:
-          method: GET
-          path: /app/create-account
+          path: /app/{page}
   
   stashResult:
     handler: handler.stashResult

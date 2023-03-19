@@ -39,11 +39,16 @@ export const authState = createSlice({
         },
         logout: state => {
             state.loggedIn = false;
+            state.token = '';
+            state.email = '';
+            state.firstName = '';
+            state.lastName = '';
         },
     }
 });
 
 export const {
     login,
+    logout,
 } = authState.actions;
 export default authState.reducer;
