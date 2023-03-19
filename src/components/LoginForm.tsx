@@ -41,16 +41,12 @@ export default function LoginForm() {
         });
 
         if (res.status !== 200) {
-            alert('Request error!');
+            const text = await res.text();
+            alert(`Request error: ${text}`);
             return;
         }
 
         const resObj: LoginResponse = await res.json();
-
-        if (resObj.error) {
-            alert(resObj.msg);
-            return;
-        }
 
         const decodedToken = jose.decodeJwt(resObj.token!);
         const tokenEmail = decodedToken.email as string;

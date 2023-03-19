@@ -36,7 +36,7 @@ const serve = async (event: APIGatewayProxyEventV2, _context: Context): Promise<
             headers: {
                 'Content-Type': 'text/html',
             },
-            body: `<html><body>${err.toString()}</body></html>`,
+            body: `<html><body>Internal server error</body></html>`,
         }
     }
 }

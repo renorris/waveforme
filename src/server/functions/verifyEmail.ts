@@ -4,43 +4,31 @@
 // Verify account does not exist, then create a JWT & email to the email address for verification
 
 import { Context, APIGatewayProxyResult, APIGatewayProxyEventV2 } from 'aws-lambda';
-import { S3 } from '@aws-sdk/client-s3'
-import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
-import * as jose from 'jose';
-import { CreateAccountRequest, CreateAccountResponse } from 'src/interfaces/createAccountInterfaces';
 import { VerifyEmailRequest, VerifyEmailResponse } from 'src/interfaces/verifyEmailInterfaces';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+
 import config from '../../config';
+import { doesAccountExist } from './util/doesAccountExist';
+import { validateVerifyEmailRequest } from './util/validators';
+import { signClaims } from './util/signClaims';
 
 
 const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Promise<APIGatewayProxyResult> => {
     try {
         console.log('verifyEmail is running');
 
+        // Obtain request object from event body
         const reqObj: VerifyEmailRequest = JSON.parse(event.body!);
 
-        // Check if account already exists
-        const dynamoDbClient = new DynamoDBClient({ region: 'us-east-2' });
-        const cmdParams = {
-            TableName: 'waveforme_users',
-            Limit: 1,
-            Key: {
-                'email': { 'S': reqObj.email }
-            }
-        }
-        const command = new GetItemCommand(cmdParams);
-        const dbRes = await dynamoDbClient.send(command);
-        
-        if (dbRes.Item) {
-            // There's already a registered account.
-            console.log('Already account exist');
+        // Validate request
+        if (!validateVerifyEmailRequest(reqObj)) {
             const resObj: VerifyEmailResponse = {
                 error: true,
-                msg: 'An account with this email already exists.'
+                msg: 'Invalid request'
             }
 
             return {
-                statusCode: 200,
+                statusCode: 400,
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -48,28 +36,23 @@ const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Pr
             }
         }
 
-        console.log('Creating verification JWT...');
+        // Check if account already exists
+        const alreadyExists = await doesAccountExist('waveforme_users', 'us-east-2', reqObj.email);
+        if (alreadyExists) {
+            // There's already a registered account.
+            console.log('Account already exists');
+            const resObj: VerifyEmailResponse = {
+                error: true,
+                msg: 'An account with this email already exists.'
+            }
 
-        const claims = {email: reqObj.email};
-
-        // Create & sign JWT
-        const s3 = new S3({
-            region: 'us-east-2'
-        });
-        const params = {
-            Bucket: 'waveforme-jwt',
-            Key: 'key'
+            return { statusCode: 400, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(resObj)}
         }
-        const s3Res = await s3.getObject(params);
-        if (s3Res.Body === undefined) throw new Error('Error with s3.getObject');
-        const alg = 'RS256';
-        const pkcs8 = await s3Res.Body!.transformToString('utf-8');
-        const privateKey = await jose.importPKCS8(pkcs8, alg);
-        const jwt = await new jose.SignJWT(claims)
-        .setProtectedHeader({ alg })
-        .setIssuedAt()
-        .setIssuer('waveforme.net')
-        .sign(privateKey);
+
+        // Sign an account verification token that will be sent in the email
+        console.log('Creating verification JWT...');
+        const claims = {type: 'verifyEmail', email: reqObj.email};
+        const jwt = await signClaims(claims, '1h');
 
         // Send the verification email
         const ses = new SESClient({ region: 'us-east-2' });
@@ -80,7 +63,7 @@ const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Pr
             Message: {
                 Body: {
                     Html: {
-                        Data: `<p>Welcome to Waveforme! Please head <a href="${config.app.URL}/app/create-account?token=${encodeURIComponent(jwt)}&email=${encodeURIComponent(reqObj.email)}">here</a> to verify your email and continue the registration process.</p>`
+                        Data: `<p>Welcome to Waveforme! Please head <a href="${config.app.URL}/app/create-account?token=${encodeURIComponent(jwt)}">here</a> to verify your email and continue the registration process.</p>`
                     }
                 },
                 Subject: {
@@ -89,6 +72,7 @@ const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Pr
             },
             Source: 'verification@waveforme.net'
         }
+        
         const sendEmailCmd = new SendEmailCommand(sesParams);
         try {
             const sesRes = await ses.send(sendEmailCmd);
@@ -96,6 +80,13 @@ const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Pr
         catch (err) {
             console.error(err);
             console.error('SES failed to send email');
+
+            const resObj: VerifyEmailResponse = {
+                error: true,
+                msg: 'Failed to send email. Please check the address.'
+            }
+
+            return { statusCode: 400, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(resObj)}
         }
 
         // Send back an OK response to the client
@@ -103,14 +94,7 @@ const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Pr
             error: false,
             msg: 'OK',
         }
-
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(resObj),
-        }
+        return { statusCode: 200, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(resObj)}
     }
     
     catch (e) {

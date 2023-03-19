@@ -7,7 +7,6 @@ import * as jose from 'jose';
 import { useAppSelector, useAppDispatch } from '../storeHooks';
 import { Button, Form } from 'react-bootstrap';
 import useConfig from './useConfig';
-import { LoginInfo, login } from './authSlice';
 import { CreateAccountRequest, CreateAccountResponse } from '../interfaces/createAccountInterfaces';
 
 export default function CreateAccountForm() {
@@ -17,7 +16,8 @@ export default function CreateAccountForm() {
 
     const [email, setEmail] = useState<string>('');
     useEffect(() => {
-        setEmail(new URLSearchParams(window.location.search).get('email')!);
+        const decodedToken = jose.decodeJwt(new URLSearchParams(window.location.search).get('token')!);
+        setEmail(decodedToken.email as string);
     });
 
     const passwordRef = useRef<HTMLInputElement>(null);
@@ -48,7 +48,8 @@ export default function CreateAccountForm() {
         });
 
         if (res.status !== 200) {
-            alert('Request error!');
+            const text = await res.text();
+            alert(`Request error: ${text}`);
             return;
         }
 

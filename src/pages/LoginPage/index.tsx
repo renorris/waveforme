@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 function LoginPage() {
     return (
         <Layout>
-            <Container>
+            <Container style={{ maxWidth: '512px' }}>
                 <Row>
                     <h2 className='text-center'>Log In</h2>
                 </Row>

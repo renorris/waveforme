@@ -4,9 +4,10 @@
 // Verify & sign JWTs for session auth
 
 import { Context, APIGatewayProxyResult, APIGatewayProxyEventV2 } from 'aws-lambda';
-import { S3 } from '@aws-sdk/client-s3'
-import * as jose from 'jose';
+import * as argon2 from 'argon2';
 import { LoginRequest, LoginResponse } from 'src/interfaces/loginInterfaces';
+import { getAccount } from './util/getAccount';
+import { signClaims } from './util/signClaims';
 
 const login = async (event: APIGatewayProxyEventV2, _context: Context): Promise<APIGatewayProxyResult> => {
     try {
@@ -14,46 +15,25 @@ const login = async (event: APIGatewayProxyEventV2, _context: Context): Promise<
 
         // Verify login info is valid
         const reqObj: LoginRequest = JSON.parse(event.body!);
+
+        const acc = await getAccount('waveforme_users', 'us-east-2', reqObj.email);
+        if (acc.length === 0 || !(await argon2.verify(acc[0].password, reqObj.password))) {
+            const resObj: LoginResponse = {
+                error: true,
+                msg: 'Invalid login info',
+                token: undefined
+            }
+    
+            return {statusCode: 401, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(resObj)}
+        }
         
         const claims = {
-            email: 'foo@bar.net',
-            firstName: 'Foo',
-            lastName: 'Bar',
+            email: acc[0].email,
+            firstName: acc[0].firstName,
+            lastName: acc[0].lastName
         }
+        const jwt = await signClaims(claims, reqObj.rememberMe ? '30d' : '24h');
 
-
-        // Create & sign JWT
-        const s3 = new S3({
-            region: 'us-east-2'
-        });
-
-        const params = {
-            Bucket: 'waveforme-jwt',
-            Key: 'key'
-        }
-
-        const s3Res = await s3.getObject(params);
-        if (s3Res.Body === undefined) {
-            console.error('Error with s3.getObject');
-            return {
-                statusCode: 500,
-                headers: {
-                    'Content-Type': 'text/plain',
-                },
-                body: 'Internal server error',
-            }
-        }
-
-        const alg = 'RS256';
-        const pkcs8 = await s3Res.Body!.transformToString('utf-8');
-        const privateKey = await jose.importPKCS8(pkcs8, alg);
-        const jwt = await new jose.SignJWT(claims)
-        .setProtectedHeader({ alg })
-        .setIssuedAt()
-        .setIssuer('waveforme.net')
-        .setExpirationTime('2h')
-        .sign(privateKey);
-        
         const resObj: LoginResponse = {
             error: false,
             msg: 'OK',

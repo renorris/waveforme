@@ -10,6 +10,21 @@ import uploaderSlice from './components/uploaderSlice';
 import waveformSlice from './components/waveformSlice';
 import authSlice from './components/authSlice';
 
+const isBrowser = typeof window !== 'undefined';
+
+const localStorageMiddleware = (store: any) => (next: any) => (action: any) => {
+    const result = next(action);
+    if (isBrowser) {
+        const authState = store.getState().auth;
+        localStorage.setItem('authState', JSON.stringify(authState));
+    }
+    return result;
+};
+
+const preloadedState = isBrowser && localStorage.getItem('authState')
+    ? { auth: JSON.parse(localStorage.getItem('authState')!) }
+    : undefined;
+
 const store = configureStore({
     reducer: {
         designer: designerSlice,
@@ -17,6 +32,15 @@ const store = configureStore({
         waveform: waveformSlice,
         auth: authSlice,
     },
+    preloadedState,
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(localStorageMiddleware),
+});
+
+store.subscribe(() => {
+    if (isBrowser) {
+        const authState = store.getState().auth;
+        localStorage.setItem('authState', JSON.stringify(authState));
+    }
 });
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -36,7 +36,8 @@ export default function VerifyEmailForm() {
         });
 
         if (res.status !== 200) {
-            alert('Request error!');
+            const text = await res.text();
+            alert(`Request error: ${text}`);
             return;
         }
 
