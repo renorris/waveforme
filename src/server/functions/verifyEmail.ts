@@ -19,12 +19,10 @@ const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Pr
 
         // Obtain request object from event body
         const reqObj: VerifyEmailRequest = JSON.parse(event.body!);
-
-        // Validate request
         if (!validateVerifyEmailRequest(reqObj)) {
             const resObj: VerifyEmailResponse = {
                 error: true,
-                msg: 'Invalid request'
+                msg: 'Bad request'
             }
 
             return {
@@ -40,10 +38,10 @@ const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Pr
         const alreadyExists = await doesAccountExist('waveforme_users', 'us-east-2', reqObj.email);
         if (alreadyExists) {
             // There's already a registered account.
-            console.log('Account already exists');
+            console.error('Account already exists');
             const resObj: VerifyEmailResponse = {
                 error: true,
-                msg: 'An account with this email already exists.'
+                msg: 'Cannot verify this email. Please check the address.'
             }
 
             return { statusCode: 400, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(resObj)}
@@ -83,7 +81,7 @@ const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Pr
 
             const resObj: VerifyEmailResponse = {
                 error: true,
-                msg: 'Failed to send email. Please check the address.'
+                msg: 'Cannot verify this email. Please check the address.'
             }
 
             return { statusCode: 400, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(resObj)}
@@ -99,12 +97,16 @@ const verifyEmail = async (event: APIGatewayProxyEventV2, _context: Context): Pr
     
     catch (e) {
         console.error(`Exception thrown in verifyEmail:\n${e}`);
+        const resObj: VerifyEmailResponse = {
+            error: true,
+            msg: 'Internal server error',
+        }
         return {
             statusCode: 500,
             headers: {
-                'Content-Type': 'text/plain',
+                'Content-Type': 'application/json',
             },
-            body: 'Internal server error',
+            body: JSON.stringify(resObj),
         }
     }
 }

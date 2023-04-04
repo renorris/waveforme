@@ -5,7 +5,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import * as jose from 'jose';
 
 import { useAppSelector, useAppDispatch } from '../storeHooks';
-import { Button, Form } from 'react-bootstrap';
+import { Alert, Button, Form, Spinner } from 'react-bootstrap';
 import useConfig from './useConfig';
 import { LoginResponse } from 'src/interfaces/loginInterfaces';
 import { LoginInfo, login } from './authSlice';
@@ -17,8 +17,16 @@ export default function VerifyEmailForm() {
     const dispatch = useAppDispatch();
 
     const emailRef = useRef<HTMLInputElement>(null);
+    
+    const [spinnerVisible, setSpinnerVisibility] = useState<boolean>(false);
+
+    const [alertVariant, setAlertVariant] = useState<string>('secondary');
+    const [alertText, setAlertText] = useState<string>('');
+    const [alertVisible, setAlertVisibility] = useState<boolean>(false);
 
     const submitEmailVerify = async () => {
+        setSpinnerVisibility(true);
+        setAlertVisibility(false);
         const email = emailRef.current!.value;
 
         const requestBody: VerifyEmailRequest = {
@@ -35,32 +43,41 @@ export default function VerifyEmailForm() {
             body: JSON.stringify(requestBody),
         });
 
-        if (res.status !== 200) {
-            const text = await res.text();
-            alert(`Request error: ${text}`);
-            return;
-        }
-
         const resObj: VerifyEmailResponse = await res.json();
 
-        if (resObj.error) {
-            alert(resObj.msg);
+        if (res.status !== 200 || resObj.error) {
+            setAlertVariant('danger');
+            setAlertText(`Error: ${resObj.msg}`);
+            setAlertVisibility(true);
+            setSpinnerVisibility(false);
             return;
         }
 
-        alert('Verification email sent!');
+        setAlertVariant('success');
+        setAlertText('Verification email sent!');
+        setAlertVisibility(true);
+        setSpinnerVisibility(false);
     }
 
     return (
-        <Form>
-            <Form.Group className="mb-3" controlId="formBasicEmail">
-                <Form.Label>Email address</Form.Label>
-                <Form.Control ref={emailRef} type="email" placeholder="Enter email" />
-            </Form.Group>
+        <>
+            <Form>
+                <Form.Group className="mb-3" controlId="formBasicEmail">
+                    <Form.Label>Email address</Form.Label>
+                    <Form.Control ref={emailRef} type="email" placeholder="Enter email" />
+                </Form.Group>
 
-            <Button variant="primary" onClick={submitEmailVerify}>
-                Verify Email
-            </Button>
-        </Form>
+                <Alert style={{display: alertVisible ? '' : 'none'}} variant={alertVariant}>
+                    {alertText}
+                </Alert>
+
+                <Button variant="primary" onClick={submitEmailVerify}>
+                    Verify Email
+                    <Spinner size={'sm'} className='ms-2' style={{display: spinnerVisible ? '' : 'none'}} animation="border" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </Spinner>
+                </Button>
+            </Form>
+        </>
     );
 }

@@ -4,10 +4,11 @@
 // Verify & sign JWTs for session auth
 
 import { Context, APIGatewayProxyResult, APIGatewayProxyEventV2 } from 'aws-lambda';
-import * as argon2 from 'argon2';
+import { createHash } from 'node:crypto';
 import { LoginRequest, LoginResponse } from 'src/interfaces/loginInterfaces';
 import { getAccount } from './util/getAccount';
 import { signClaims } from './util/signClaims';
+import { validateLoginRequest } from './util/validators';
 
 const login = async (event: APIGatewayProxyEventV2, _context: Context): Promise<APIGatewayProxyResult> => {
     try {
@@ -15,9 +16,18 @@ const login = async (event: APIGatewayProxyEventV2, _context: Context): Promise<
 
         // Verify login info is valid
         const reqObj: LoginRequest = JSON.parse(event.body!);
+        if (!validateLoginRequest(reqObj)) {
+            const resObj: LoginResponse = {
+                error: true,
+                msg: 'Bad request',
+                token: undefined
+            }
+    
+            return {statusCode: 400, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(resObj)}
+        }
 
         const acc = await getAccount('waveforme_users', 'us-east-2', reqObj.email);
-        if (acc.length === 0 || !(await argon2.verify(acc[0].password, reqObj.password))) {
+        if (acc.length === 0 || !(createHash('sha256').update(reqObj.password, 'utf-8').digest('hex') === acc[0].password)) {
             const resObj: LoginResponse = {
                 error: true,
                 msg: 'Invalid login info',
@@ -51,12 +61,17 @@ const login = async (event: APIGatewayProxyEventV2, _context: Context): Promise<
     
     catch (e) {
         console.error(`Exception thrown in login:\n${e}`);
+        const resObj: LoginResponse = {
+            error: true,
+            msg: 'Internal server error',
+            token: undefined
+        }
         return {
             statusCode: 500,
             headers: {
-                'Content-Type': 'text/plain',
+                'Content-Type': 'application/json',
             },
-            body: 'Internal server error',
+            body: JSON.stringify(resObj),
         }
     }
 }

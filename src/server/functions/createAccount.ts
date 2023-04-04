@@ -4,19 +4,30 @@
 // Verify account does not exist, then create a JWT & email to the email address for verification
 
 import { Context, APIGatewayProxyResult, APIGatewayProxyEventV2 } from 'aws-lambda';
-import { DynamoDBClient, GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import * as jose from 'jose';
-import * as argon2 from 'argon2';
+import { createHash } from 'node:crypto';
 import { CreateAccountRequest, CreateAccountResponse } from 'src/interfaces/createAccountInterfaces';
 import { verifyJWT } from './util/verifyJWT';
 import { doesAccountExist } from './util/doesAccountExist';
 import { signClaims } from './util/signClaims';
+import { validateCreateAccountRequest } from './util/validators';
+import { LoginResponse } from 'src/interfaces/loginInterfaces';
 
 const createAccount = async (event: APIGatewayProxyEventV2, _context: Context): Promise<APIGatewayProxyResult> => {
     try {
         console.log('createAccount is running');
 
         const reqObj: CreateAccountRequest = JSON.parse(event.body!);
+        if (!validateCreateAccountRequest(reqObj)) {
+            const resObj: LoginResponse = {
+                error: true,
+                msg: 'Bad request',
+                token: undefined
+            }
+    
+            return {statusCode: 400, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(resObj)}
+        }
 
         // Verify that JWT is valid
         const isJWTValid = verifyJWT(reqObj.token);
@@ -62,7 +73,7 @@ const createAccount = async (event: APIGatewayProxyEventV2, _context: Context): 
         const jwt = await signClaims(claims, '24h');
         
         // Hash password & write account to database
-        const pwdHash = await argon2.hash(reqObj.password);
+        const pwdHash = createHash('sha256').update(reqObj.password, 'utf-8').digest('hex');
         const putItemCmdParams = {
             TableName: 'waveforme_users',
             Item: {
@@ -101,12 +112,17 @@ const createAccount = async (event: APIGatewayProxyEventV2, _context: Context): 
 
     catch (e) {
         console.error(`Exception thrown in createAccount:\n${e}`);
+        const resObj: CreateAccountResponse = {
+            error: true,
+            msg: 'Internal server error',
+            token: undefined
+        }
         return {
             statusCode: 500,
             headers: {
-                'Content-Type': 'text/plain',
+                'Content-Type': 'application/json',
             },
-            body: 'Internal server error',
+            body: JSON.stringify(resObj),
         }
     }
 }

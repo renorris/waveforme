@@ -56,6 +56,10 @@ functions:
         Action: 
           - "s3:GetObject"
         Resource: "arn:aws:s3:::waveforme-jwt/*"
+      - Effect: "Allow"
+        Action: 
+          - "dynamodb:GetItem"
+        Resource: "arn:aws:dynamodb:us-east-2:804178625761:table/waveforme_users"
   
   verifyEmail:
     handler: handler.verifyEmail
@@ -69,9 +73,13 @@ functions:
           - "s3:GetObject"
         Resource: "arn:aws:s3:::waveforme-jwt/*"
       - Effect: "Allow"
+        Action: 
+          - "dynamodb:GetItem"
+        Resource: "arn:aws:dynamodb:us-east-2:804178625761:table/waveforme_users"
+      - Effect: "Allow"
         Action:
           - "ses:SendEmail"
-        Resource: "arn:aws:ses:us-east-2:804178625761:identity/waveforme.net"
+        Resource: "arn:aws:ses:us-east-2:804178625761:identity/*"
   
   createAccount:
     handler: handler.createAccount
@@ -84,6 +92,11 @@ functions:
         Action: 
           - "s3:GetObject"
         Resource: "arn:aws:s3:::waveforme-jwt/*"
+      - Effect: "Allow"
+        Action: 
+          - "dynamodb:GetItem"
+          - "dynamodb:PutItem"
+        Resource: "arn:aws:dynamodb:us-east-2:804178625761:table/waveforme_users"
 
 custom:
   webpack:
