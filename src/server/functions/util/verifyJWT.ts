@@ -30,7 +30,7 @@ export const verifyJWT = async (jwt: string): Promise<boolean> => {
     }
     catch (err) {
         // Thrown error, assume it's an invalid token
-        console.log('jwt verification failed.');
+        console.log('jwt verification failed');
         return false;
     }
 

@@ -7,9 +7,6 @@ import * as jose from 'jose';
 import { useAppSelector, useAppDispatch } from '../storeHooks';
 import { Alert, Button, Form, Spinner } from 'react-bootstrap';
 import useConfig from './useConfig';
-import { LoginResponse } from 'src/interfaces/loginInterfaces';
-import { LoginInfo, login } from './authSlice';
-import { VerifyEmailRequest, VerifyEmailResponse } from '../interfaces/verifyEmailInterfaces';
 
 export default function VerifyEmailForm() {
 
@@ -29,7 +26,7 @@ export default function VerifyEmailForm() {
         setAlertVisibility(false);
         const email = emailRef.current!.value;
 
-        const requestBody: VerifyEmailRequest = {
+        const requestBody = {
             'email': email,
         };
 
@@ -43,7 +40,7 @@ export default function VerifyEmailForm() {
             body: JSON.stringify(requestBody),
         });
 
-        const resObj: VerifyEmailResponse = await res.json();
+        const resObj = await res.json();
 
         if (res.status !== 200 || resObj.error) {
             setAlertVariant('danger');

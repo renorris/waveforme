@@ -5,11 +5,11 @@
 
 import { Context, APIGatewayProxyResult, APIGatewayProxyEventV2 } from 'aws-lambda';
 import { AuthResponse } from './authResponse';
-import { AuthRequestType, BaseAuthRequest, CreateAccountRequest, CreateAccountRequestType, LoginRequest, LoginRequestData } from './authRequest';
+import { AuthRequestData, BaseAuthRequest, CreateAccountRequest, CreateAccountRequestData, LoginRequest, LoginRequestData } from './authRequest';
 
 const authHandler = async (event: APIGatewayProxyEventV2, _context: Context): Promise<APIGatewayProxyResult> => {
     try {
-        let authRequest: BaseAuthRequest<AuthRequestType>;
+        let authRequest: BaseAuthRequest<AuthRequestData>;
         const bodyObj = JSON.parse(event.body!);
 
         switch (event.rawPath) {
@@ -17,7 +17,7 @@ const authHandler = async (event: APIGatewayProxyEventV2, _context: Context): Pr
                 authRequest = new LoginRequest(bodyObj as LoginRequestData);
                 break;
             case '/rest/auth/createaccount':
-                authRequest = new CreateAccountRequest(bodyObj as CreateAccountRequestType);
+                authRequest = new CreateAccountRequest(bodyObj as CreateAccountRequestData);
                 break;
             default:
                 return new AuthResponse(404, 'Not found', {}).serialize();

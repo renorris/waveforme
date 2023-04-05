@@ -4,7 +4,13 @@
 // Helper to get account from dynamoDB
 
 import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
-import { WaveformeUserAccount } from "src/interfaces/userAccountInterface";
+
+export type WaveformeUserAccount = {
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+}
 
 export const getAccount = async (table: string, region: string, email: string): Promise<WaveformeUserAccount[]> => {
     const dbClient = new DynamoDBClient({ region: region });

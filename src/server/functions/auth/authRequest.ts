@@ -8,7 +8,7 @@ import * as yup from 'yup';
 import * as jose from 'jose';
 import { createHash } from 'node:crypto';
 
-import { AuthResponse, CreateAccountResponseData } from './authResponse';
+import { AuthResponse, CreateAccountResponseData, LoginResponseData } from './authResponse';
 import { verifyJWT } from '../util/verifyJWT';
 import { doesAccountExist } from '../util/doesAccountExist';
 import { signClaims } from '../util/signClaims';
@@ -29,6 +29,7 @@ export interface LoginRequestData extends AuthRequestData {
     password: string,
     rememberMe: string,
 }
+
 
 export class BaseAuthRequest<T extends AuthRequestData> {
     private _data: T;
@@ -65,6 +66,7 @@ export class BaseAuthRequest<T extends AuthRequestData> {
     }
 
 }
+
 
 export class CreateAccountRequest extends BaseAuthRequest<CreateAccountRequestData> {
     
@@ -118,6 +120,7 @@ export class CreateAccountRequest extends BaseAuthRequest<CreateAccountRequestDa
     }
 }
 
+
 export class LoginRequest extends BaseAuthRequest<LoginRequestData> {
     
     constructor(data: LoginRequestData) {
@@ -135,7 +138,19 @@ export class LoginRequest extends BaseAuthRequest<LoginRequestData> {
         if (acc.length === 0 || (createHash('sha256').update(this.data.password, 'utf-8').digest('hex') !== acc[0].password)) {
             return new AuthResponse(401, 'Invalid login info', {}).serialize();
         }
+
+        const workingAcc = acc.at(0)!;
+        const claims = {
+            email: workingAcc.email,
+            firstName: workingAcc.firstName,
+            lastName: workingAcc.lastName
+        }
+        const jwt = await signClaims(claims, this.data.rememberMe ? '30d' : '24h');
+
+        const res: LoginResponseData = {
+            token: jwt,
+        }
         
-        
+        return new AuthResponse(200, 'OK', res).serialize();
     }
 }

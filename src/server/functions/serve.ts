@@ -29,7 +29,6 @@ const serve = async (event: APIGatewayProxyEventV2, _context: Context): Promise<
         }
     }
     catch(err) {
-        // TODO: Make errors return more nicely
         console.error(err);
         return {
             statusCode: 500,

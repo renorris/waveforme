@@ -8,8 +8,8 @@ import { useAppSelector, useAppDispatch } from '../storeHooks';
 import { Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import useConfig from './useConfig';
-import { LoginResponse } from '../interfaces/loginInterfaces';
 import { LoginInfo, login, logout } from './authSlice';
+import { AuthResponse, LoginResponseData } from 'src/server/functions/auth/authResponse';
 
 export default function LoginForm() {
 
@@ -35,7 +35,7 @@ export default function LoginForm() {
             'rememberMe': rememberMe
         };
 
-        const url = `${config.app.URL}/rest/login`;
+        const url = `${config.app.URL}/rest/auth/login`;
 
         const res = await fetch(url, {
             method: 'POST',
@@ -51,9 +51,9 @@ export default function LoginForm() {
             return;
         }
 
-        const resObj: LoginResponse = await res.json();
+        const resObj = await res.json();
 
-        const decodedToken = jose.decodeJwt(resObj.token!);
+        const decodedToken = jose.decodeJwt(resObj.data!.token!);
         const tokenEmail = decodedToken.email as string;
         const tokenFirstName = decodedToken.firstName as string;
         const tokenLastName = decodedToken.lastName as string;

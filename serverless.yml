@@ -38,55 +38,12 @@ functions:
           method: GET
           path: /app/{page}
   
-  stashResult:
-    handler: handler.stashResult
+  auth:
+    handler: handler.authHandler
     events:
       - httpApi:
           method: POST
-          path: /rest/stashResult
-  
-  login:
-    handler: handler.login
-    events:
-      - httpApi:
-          method: POST
-          path: /rest/login
-    iamRoleStatements:
-      - Effect: "Allow"
-        Action: 
-          - "s3:GetObject"
-        Resource: "arn:aws:s3:::waveforme-jwt/*"
-      - Effect: "Allow"
-        Action: 
-          - "dynamodb:GetItem"
-        Resource: "arn:aws:dynamodb:us-east-2:804178625761:table/waveforme_users"
-  
-  verifyEmail:
-    handler: handler.verifyEmail
-    events:
-      - httpApi:
-          method: POST
-          path: /rest/verifyEmail
-    iamRoleStatements:
-      - Effect: "Allow"
-        Action: 
-          - "s3:GetObject"
-        Resource: "arn:aws:s3:::waveforme-jwt/*"
-      - Effect: "Allow"
-        Action: 
-          - "dynamodb:GetItem"
-        Resource: "arn:aws:dynamodb:us-east-2:804178625761:table/waveforme_users"
-      - Effect: "Allow"
-        Action:
-          - "ses:SendEmail"
-        Resource: "arn:aws:ses:us-east-2:804178625761:identity/*"
-  
-  createAccount:
-    handler: handler.createAccount
-    events:
-      - httpApi:
-          method: POST
-          path: /rest/createAccount
+          path: /rest/auth/{authCall}
     iamRoleStatements:
       - Effect: "Allow"
         Action: 

@@ -5,13 +5,6 @@ import { APIGatewayProxyResult } from "aws-lambda";
 
 // Define auth api responses
 
-interface AuthResponseSchema {
-    msg: string,
-    data: AuthResponseData;
-}
-
-export interface EmptyResponseData {}
-
 export interface VerifyEmailResponseData {
     email: string,
     token: string;
@@ -25,18 +18,38 @@ export interface CreateAccountResponseData {
     token: string;
 }
 
-export type AuthResponseData = EmptyResponseData | VerifyEmailResponseData | LoginResponseData | CreateAccountResponseData;
+export type AuthResponseData = VerifyEmailResponseData | LoginResponseData | CreateAccountResponseData;
 
-export class AuthResponse {
-    private resObj: AuthResponseSchema;
-    private statusCode: number;
+export class AuthResponse<T extends AuthResponseData | {}> {
+    private _msg: string;
+    private _data: T;
+    private _statusCode: number;
 
-    constructor(statusCode: number, msg: string, data: AuthResponseData) {
-        this.resObj = {
-            msg: msg,
-            data: data,
-        }
+    constructor(statusCode: number, msg: string, data: T) {
         this.statusCode = statusCode;
+        this.msg = msg;
+        this.data = data;
+    }
+
+    public get statusCode(): number {
+        return this._statusCode;
+    }
+    private set statusCode(value: number) {
+        this._statusCode = value;
+    }
+
+    public get msg(): string {
+        return this._msg;
+    }
+    private set msg(value: string) {
+        this._msg = value;
+    }
+
+    public get data(): T {
+        return this._data;
+    }
+    private set data(value: T) {
+        this._data = value;
     }
 
     public serialize(): APIGatewayProxyResult {
@@ -45,7 +58,10 @@ export class AuthResponse {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(this.resObj),
+            body: JSON.stringify({
+                msg: this.msg,
+                data: this.data
+            }),
         }
     }
 }
