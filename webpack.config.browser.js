@@ -25,15 +25,6 @@ module.exports = (env) => {
 
         optimization: {
             minimize: false,
-            // minimizer: [
-            //     new TerserPlugin({
-            //         terserOptions: {
-            //             compress: {
-            //                 drop_console: true
-            //             },
-            //         },
-            //     }),
-            // ],
             runtimeChunk: 'single',
             splitChunks: {
                 chunks: 'async',

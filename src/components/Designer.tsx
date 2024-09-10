@@ -17,9 +17,6 @@ export default function Designer() {
 
     return (
         <>
-            {/* <div>Active page - <span className='font-monospace'>{activePage}</span></div>
-            <div>orig MP3 URL - <a href={mp3URL as string} target='_blank' className='font-monospace'>{mp3URL}</a></div> */}
-            
             { activePage === 'uploader' && 
                 <Uploader />
             }

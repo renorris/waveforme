@@ -11,9 +11,9 @@ const config = {
     app: {
         TITLE: manifest.short_name,
         THEME_COLOR: manifest.theme_color,
-        URL: isLocal ? `http://localhost:3000` : `https://d3w0l83c1j4l62.cloudfront.net`,
-        DIST_URL: isLocal ? `http://localhost:8080` : `https://d3w0l83c1j4l62.cloudfront.net`,
-        PUBLIC_URL: isLocal ? `http://localhost:8080` : `https://d3w0l83c1j4l62.cloudfront.net`,
+        URL: isLocal ? `http://localhost:3000` : `insert_cloudfront_url`,
+        DIST_URL: isLocal ? `http://localhost:8080` : `insert_cloudfront_url`,
+        PUBLIC_URL: isLocal ? `http://localhost:8080` : `insert_cloudfront_url`,
     },
 }
 

@@ -72,10 +72,6 @@ export default function Uploader() {
 
         // Switch active page to main
         dispatch(switchPage('main'));
-
-        // DEBUG
-        //const audioBufTest = await mp3UrlToAudioBuffer(localOriginalMP3URL, 0.3, 0.7);
-        //console.log(`audioBufTest duration: ${audioBufTest.duration}`);
     }
 
     return (
@@ -106,7 +102,6 @@ export default function Uploader() {
                                 For the best experience possible, a <span className='fw-semibold'>one minute</span> upload limit is enforced.&nbsp;
                                 <span
                                     style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
-                                //onClick={() => setShowAudioTrimHelp(true)}
                                 >
                                     Need help?
                                 </span>
@@ -121,8 +116,6 @@ export default function Uploader() {
                     </Row>
 
                     <Modal
-                        //show={showAudioTrimHelp}
-                        //onHide={() => setShowAudioTrimHelp(false)}
                         aria-labelledby="contained-modal-title-vcenter"
                         centered
                     >
@@ -135,9 +128,7 @@ export default function Uploader() {
                             </Stack>
                         </Modal.Body>
                         <Modal.Footer>
-                            <Button variant='success'
-                            //onClick={() => setShowAudioTrimHelp(false)}
-                            >
+                            <Button variant='success'>
                                 Okay
                             </Button>
                         </Modal.Footer>

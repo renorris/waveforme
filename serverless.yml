@@ -1,7 +1,7 @@
 # Waveforme serverless.yml
 # Copyright (C) 2023 Reese Norris - All Rights Reserved
 
-org: rnorris
+org: null
 app: waveforme
 service: waveforme
 frameworkVersion: '3'
